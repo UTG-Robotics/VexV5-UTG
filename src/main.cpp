@@ -1,8 +1,8 @@
 #include "main.h"
 
-double xPos{0};
-double yPos{0};
-double theta{0};
+double xPos = 0;
+double yPos = 0;
+double theta = 0;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -17,10 +17,10 @@ void initialize()
 	odometryArgs->x = &xPos;
 	odometryArgs->y = &yPos;
 	odometryArgs->theta = &theta;
-	odometryArgs->leftEncoderPort = 9;
-	odometryArgs->rightEncoderPort = 19;
-	odometryArgs->leftWheelDistance = 5.0;
-	odometryArgs->rightWheelDistance = 5.0;
+	odometryArgs->leftEncoderPort = 12;
+	odometryArgs->rightEncoderPort = 3;
+	odometryArgs->leftWheelDistance = 6.5625;
+	odometryArgs->rightWheelDistance = 6.5625;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -74,13 +74,19 @@ void autonomous() {}
 
 void opcontrol()
 {
-	pros::lcd::set_text(7, std::to_string(theta));
-	// Initialize the drivetrainss
+	// pros::lcd::set_text(7, std::to_string(theta));
+	// Initialize the drivetrains
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::Motor front_right_mtr(10);
 	pros::Motor front_left_mtr(1);
 	pros::Motor back_right_mtr(20);
 	pros::Motor back_left_mtr(11);
+
+	pros::Rotation testEncoder(5);
+
+	theta = 0;
+	pros::lcd::print(1, "%i", testEncoder.reset_position());
+	pros::lcd::print(2, "%i", testEncoder.reset());
 
 	while (true)
 	{
@@ -95,6 +101,7 @@ void opcontrol()
 		back_right_mtr = -joystickCh3 + joystickCh1 - joystickCh4;
 		back_left_mtr = joystickCh3 + joystickCh1 - joystickCh4;
 
+		pros::lcd::set_text(7, std::to_string(fmod(theta, 360.0)));
 		pros::delay(20);
 	}
 }
