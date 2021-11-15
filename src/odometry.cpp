@@ -14,13 +14,13 @@ void odometry(void *odometryArgs)
 
     // pros::lcd::print(7, "%p", (((OdometryArgs *)odometryArgs)->theta));
 
-    long int currentLeft = 0;
-    long int currentRight = 0;
-    long int oldLeft = 0;
-    long int oldRight = 0;
+    double currentLeft = 0;
+    double currentRight = 0;
+    double oldLeft = 0;
+    double oldRight = 0;
 
-    long int deltaLeft = 0;
-    long int deltaRight = 0;
+    double deltaLeft = 0;
+    double deltaRight = 0;
     double deltaTheta = 0;
 
     leftEncoder.reset();
@@ -50,7 +50,6 @@ void odometry(void *odometryArgs)
         //Accumulate the change in angle
         *(((OdometryArgs *)odometryArgs)->theta) += (double)deltaTheta;
 
-        
         pros::delay(10);
     }
 }

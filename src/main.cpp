@@ -96,10 +96,10 @@ void opcontrol()
 		int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
 
 		// Motor speed control
-		front_right_mtr = -joystickCh3 + joystickCh1 + joystickCh4;
-		front_left_mtr = joystickCh3 + joystickCh1 + joystickCh4;
-		back_right_mtr = -joystickCh3 + joystickCh1 - joystickCh4;
-		back_left_mtr = joystickCh3 + joystickCh1 - joystickCh4;
+		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
+		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
+		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
+		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
 		pros::lcd::set_text(7, std::to_string(fmod(theta * M_PI / 180, 360.0)));
 		pros::delay(20);
