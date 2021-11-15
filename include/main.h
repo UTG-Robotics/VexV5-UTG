@@ -34,11 +34,14 @@
  */
 #define PROS_USE_LITERALS
 
+#define _USE_MATH_DEFINES
+
 #include "api.h"
 
 /**
  * You should add more #includes here
  */
+#include <math.h>
 #include "odometry.hpp"
 //#include "okapi/api.hpp"
 //#include "pros/api_legacy.h"

@@ -101,7 +101,7 @@ void opcontrol()
 		back_right_mtr = -joystickCh3 + joystickCh1 - joystickCh4;
 		back_left_mtr = joystickCh3 + joystickCh1 - joystickCh4;
 
-		pros::lcd::set_text(7, std::to_string(fmod(theta, 360.0)));
+		pros::lcd::set_text(7, std::to_string(fmod(theta * M_PI / 180, 360.0)));
 		pros::delay(20);
 	}
 }

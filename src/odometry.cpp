@@ -32,18 +32,25 @@ void odometry(void *odometryArgs)
         oldLeft = currentLeft;
         oldRight = currentRight;
 
-        // Get the current encoder values in inches
+        // Get the current encoder values in degrees
         currentLeft = -(leftEncoder.get_position() / 100.0);
         currentRight = (rightEncoder.get_position() / 100.0);
 
+        // multiply by wheel diameter then divide by 360 degrees to get inches
+        currentLeft *= 2.5 / 360.0;
+        currentRight *= 2.5 / 360.0;
+
+        // Calculate the change in distance
         deltaLeft = (currentLeft - oldLeft);
         deltaRight = (currentRight - oldRight);
 
-        // Calculate the delta theta traveled
+        // Calculate the change in angle
         deltaTheta = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
-        // pros::lcd::set_text(7, std::to_string(deltaTheta));
 
+        //Accumulate the change in angle
         *(((OdometryArgs *)odometryArgs)->theta) += (double)deltaTheta;
+
+        
         pros::delay(10);
     }
 }
