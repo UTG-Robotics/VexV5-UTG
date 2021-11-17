@@ -19,8 +19,8 @@ void initialize()
 	odometryArgs->theta = &theta;
 	odometryArgs->leftEncoderPort = 12;
 	odometryArgs->rightEncoderPort = 3;
-	odometryArgs->leftWheelDistance = 6.5625;
-	odometryArgs->rightWheelDistance = 6.5625;
+	odometryArgs->leftWheelDistance = 6.25;
+	odometryArgs->rightWheelDistance = 6.25;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -101,7 +101,8 @@ void opcontrol()
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
-		pros::lcd::set_text(7, std::to_string(fmod(theta * M_PI / 180, 360.0)));
+		// pros::lcd::set_text(7, std::to_string(theta));
+		pros::lcd::set_text(7, std::to_string(fmod(theta * 180 / M_PI, 360.0)));
 		pros::delay(20);
 	}
 }

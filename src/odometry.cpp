@@ -2,7 +2,6 @@
 
 void odometry(void *odometryArgs)
 {
-
     *((OdometryArgs *)odometryArgs)->x = 0;
     *((OdometryArgs *)odometryArgs)->y = 0;
     *((OdometryArgs *)odometryArgs)->theta = 0;
@@ -29,27 +28,29 @@ void odometry(void *odometryArgs)
     rightEncoder.reset_position();
     while (true)
     {
-        oldLeft = currentLeft;
-        oldRight = currentRight;
+        // oldLeft = currentLeft;
+        // oldRight = currentRight;
 
         // Get the current encoder values in degrees
         currentLeft = -(leftEncoder.get_position() / 100.0);
         currentRight = (rightEncoder.get_position() / 100.0);
 
         // multiply by wheel diameter then divide by 360 degrees to get inches
-        currentLeft *= 2.5 / 360.0;
-        currentRight *= 2.5 / 360.0;
+        currentLeft *= (2.75 * M_PI) / 360.0;
+        currentRight *= (2.75 * M_PI) / 360.0;
 
         // Calculate the change in distance
-        deltaLeft = (currentLeft - oldLeft);
-        deltaRight = (currentRight - oldRight);
+        // deltaLeft = (currentLeft - oldLeft);
+        // deltaRight = (currentRight - oldRight);
 
         // Calculate the change in angle
-        deltaTheta = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
+        deltaTheta = (currentLeft - currentRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
 
         //Accumulate the change in angle
         *(((OdometryArgs *)odometryArgs)->theta) += (double)deltaTheta;
 
+        leftEncoder.reset_position();
+        rightEncoder.reset_position();
         pros::delay(10);
     }
 }
