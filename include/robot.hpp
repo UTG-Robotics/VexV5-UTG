@@ -1,0 +1,1 @@
+void rotateToAngle(double angle);

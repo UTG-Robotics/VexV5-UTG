@@ -43,12 +43,13 @@
  */
 #include <math.h>
 #include "odometry.hpp"
+#include "robot.hpp"
 #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
-// extern double xPos;
-// extern double yPos;
-// extern double theta;
+extern double xPos;
+extern double yPos;
+extern double theta;
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do

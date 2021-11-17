@@ -88,21 +88,22 @@ void opcontrol()
 	pros::lcd::print(1, "%i", testEncoder.reset_position());
 	pros::lcd::print(2, "%i", testEncoder.reset());
 
-	while (true)
-	{
-		//Get Joystick Values
-		int joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
-		int joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
-		int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
+	// while (true)
+	// {
+	// 	//Get Joystick Values
+	// 	int joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
+	// 	int joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
+	// 	int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
 
-		// Motor speed control
-		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
-		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
-		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
-		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+	// 	// Motor speed control
+	// 	front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
+	// 	front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
+	// 	back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
+	// 	back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
-		// pros::lcd::set_text(7, std::to_string(theta));
-		pros::lcd::set_text(7, std::to_string(fmod(theta * 180 / M_PI, 360.0)));
-		pros::delay(20);
-	}
+	// 	// pros::lcd::set_text(7, std::to_string(theta));
+	// 	pros::delay(20);
+	// }
+
+	rotateToAngle(1800);
 }
