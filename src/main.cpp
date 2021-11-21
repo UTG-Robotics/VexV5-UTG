@@ -13,14 +13,12 @@ double theta = 0;
 void initialize()
 {
 	OdometryArgs *odometryArgs = new OdometryArgs();
-
-	odometryArgs->x = &xPos;
-	odometryArgs->y = &yPos;
-	odometryArgs->theta = &theta;
 	odometryArgs->leftEncoderPort = 12;
 	odometryArgs->rightEncoderPort = 3;
-	odometryArgs->leftWheelDistance = 6.25;
-	odometryArgs->rightWheelDistance = 6.25;
+	odometryArgs->sideEncoderPort = 5;
+	odometryArgs->leftWheelDistance = 6.31;
+	odometryArgs->rightWheelDistance = 6.31;
+	odometryArgs->sideWheelDistance = 1;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -38,9 +36,7 @@ void disabled() {}
  * Runs after initialize(), and before autonomous when connected to the Field
  * Management System or the VEX Competition Switch. This is intended for
  * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
+ 
  * starts.
  */
 void competition_initialize() {}
@@ -82,12 +78,7 @@ void opcontrol()
 	pros::Motor back_right_mtr(20);
 	pros::Motor back_left_mtr(11);
 
-	pros::Rotation testEncoder(5);
-
 	theta = 0;
-	pros::lcd::print(1, "%i", testEncoder.reset_position());
-	pros::lcd::print(2, "%i", testEncoder.reset());
-
 	// while (true)
 	// {
 	// 	//Get Joystick Values
@@ -105,5 +96,5 @@ void opcontrol()
 	// 	pros::delay(20);
 	// }
 
-	rotateToAngle(1800);
+	rotateToAngle(90);
 }
