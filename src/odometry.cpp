@@ -16,7 +16,7 @@ void odometry(void *odometryArgs)
 
     double deltaLeft = 0;
     double deltaRight = 0;
-
+    double deltaSide = 0;
     double deltaTheta = 0;
 
     leftEncoder.reset();
@@ -37,23 +37,29 @@ void odometry(void *odometryArgs)
         deltaRight *= (2.75 * M_PI) / 360.0;
         deltaSide *= (2.75 * M_PI) / 360.0;
 
+        // deltaLeft = 1;
+        // deltaRight = -1;
+        // theta = 0;
+
         // Calculate the change in angle
         deltaTheta = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
 
         //Accumulate the change in angle
         theta += deltaTheta * 180 / M_PI;
         double thetaRad = theta * M_PI / 180;
+
         double h;
         double h2;
         double i;
-        if (theta)
+        if (deltaTheta)
         {
-            double radius = deltaRight / thetaRad;
-            i = thetaRad / 2.0;
+            double radius = deltaRight / deltaTheta;
+            i = deltaTheta / 2.0;
             double sinI = sin(i);
+
             h = ((radius + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sinI) * 2.0;
 
-            double radius2 = deltaSide / thetaRad;
+            double radius2 = deltaSide / deltaTheta;
 
             h2 = ((radius2 + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sinI) * 2.0;
         }
@@ -63,12 +69,24 @@ void odometry(void *odometryArgs)
             i = 0;
             h2 = deltaSide;
         }
-        xChange
+        double p = i + thetaRad;
 
-            leftEncoder.reset_position();
+        double cosP = cos(p);
+        double sinP = sin(p);
+
+        yPos += h * cosP;
+        xPos += h * sinP;
+
+        yPos += h2 * -sinP;
+        xPos += h2 * cosP;
+
+        leftEncoder.reset_position();
         rightEncoder.reset_position();
+        sideEncoder.reset_position();
 
-        pros::lcd::set_text(7, std::to_string(theta));
+        pros::lcd::set_text(5, "Rotation: " + std::to_string(theta));
+        pros::lcd::set_text(6, "X pos: " + std::to_string(xPos));
+        pros::lcd::set_text(7, "Y pos: " + std::to_string(yPos));
         pros::delay(10);
     }
 }

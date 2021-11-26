@@ -15,10 +15,11 @@ void initialize()
 	OdometryArgs *odometryArgs = new OdometryArgs();
 	odometryArgs->leftEncoderPort = 12;
 	odometryArgs->rightEncoderPort = 3;
-	odometryArgs->sideEncoderPort = 5;
-	odometryArgs->leftWheelDistance = 6.31;
-	odometryArgs->rightWheelDistance = 6.31;
-	odometryArgs->sideWheelDistance = 1;
+	odometryArgs->sideEncoderPort = 19;
+	//Increasing distance increases overshoot
+	odometryArgs->leftWheelDistance = 6.27;
+	odometryArgs->rightWheelDistance = 6.27;
+	odometryArgs->sideWheelDistance = 5.0;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -77,8 +78,8 @@ void opcontrol()
 	pros::Motor front_left_mtr(1);
 	pros::Motor back_right_mtr(20);
 	pros::Motor back_left_mtr(11);
+	// pros::Motor arm_mtr(12);
 
-	theta = 0;
 	// while (true)
 	// {
 	// 	//Get Joystick Values
@@ -96,5 +97,5 @@ void opcontrol()
 	// 	pros::delay(20);
 	// }
 
-	rotateToAngle(90);
+	rotateToAngle(1080);
 }
