@@ -2,7 +2,7 @@
 
 double xPos = 0;
 double yPos = 0;
-double theta = 0;
+double angle = 0;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -78,24 +78,47 @@ void opcontrol()
 	pros::Motor front_left_mtr(1);
 	pros::Motor back_right_mtr(20);
 	pros::Motor back_left_mtr(11);
-	// pros::Motor arm_mtr(12);
+	pros::Motor arm_mtr(9);
 
-	// while (true)
-	// {
-	// 	//Get Joystick Values
-	// 	int joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
-	// 	int joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
-	// 	int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
+	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-	// 	// Motor speed control
+	// driveToPoint(0, 12, 90);
+	driveForward(12);
+	while (true)
+	{
+		//Get Joystick Values
+		int joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
+		int joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
+		int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
+
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		{
+			arm_mtr.move(50);
+		}
+		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			arm_mtr.move(-127);
+		}
+		else
+		{
+			arm_mtr.move(0);
+		}
+
+		// Motor speed control
+		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
+		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
+		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
+		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+
+		// pros::lcd::set_text(7, std::to_string(theta));
+		pros::delay(20);
+	}
+
+	// rotateToAngle(1080);
+	// driveToPoint(0, 0, 90);
+
 	// 	front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
 	// 	front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
 	// 	back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 	// 	back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
-
-	// 	// pros::lcd::set_text(7, std::to_string(theta));
-	// 	pros::delay(20);
-	// }
-
-	rotateToAngle(1080);
 }

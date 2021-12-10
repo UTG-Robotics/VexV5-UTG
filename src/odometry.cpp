@@ -1,10 +1,19 @@
 #include "main.h"
 
+double modulo(double a, double b)
+{
+    while (a > b)
+    {
+        a -= b;
+    }
+    return a;
+}
+
 void odometry(void *odometryArgs)
 {
     xPos = 0;
     yPos = 0;
-    theta = 0;
+    angle = 0;
 
     pros::Rotation leftEncoder(((OdometryArgs *)odometryArgs)->leftEncoderPort);
     pros::Rotation rightEncoder(((OdometryArgs *)odometryArgs)->rightEncoderPort);
@@ -14,10 +23,26 @@ void odometry(void *odometryArgs)
 
     // pros::lcd::print(7, "%p", (((OdometryArgs *)odometryArgs)->theta));
 
+    const double ENCODERTOINCHES = 0.00023998277;
+    double leftReset = 0;
+    double rightReset = 0;
+    double thetaReset = 0;
+
+    double currentLeftEncoder = leftEncoder.get_position();
+    double currentRightEncoder = rightEncoder.get_position();
+    double currentSideEncoder = sideEncoder.get_position();
+
+    double oldLeftEncoder = 0;
+    double oldRightEncoder = 0;
+    double oldSideEncoder = 0;
+
     double deltaLeft = 0;
     double deltaRight = 0;
     double deltaSide = 0;
     double deltaTheta = 0;
+
+    double theta = 0;
+    double thetaNew = 0;
 
     leftEncoder.reset();
     rightEncoder.reset();
@@ -28,40 +53,45 @@ void odometry(void *odometryArgs)
     while (true)
     {
         // Get the current encoder values in degrees
-        deltaLeft = -(leftEncoder.get_position() / 100.0);
-        deltaRight = (rightEncoder.get_position() / 100.0);
-        deltaSide = (sideEncoder.get_position() / 100.0);
+        currentLeftEncoder = leftEncoder.get_position() * ENCODERTOINCHES;
+        currentRightEncoder = rightEncoder.get_position() * ENCODERTOINCHES;
+        currentSideEncoder = sideEncoder.get_position() * ENCODERTOINCHES;
 
-        // multiply by wheel circumference then divide by 360 degrees to get inches
-        deltaLeft *= (2.75 * M_PI) / 360.0;
-        deltaRight *= (2.75 * M_PI) / 360.0;
-        deltaSide *= (2.75 * M_PI) / 360.0;
+        deltaLeft = -(currentLeftEncoder - oldLeftEncoder);
+        deltaRight = (currentRightEncoder - oldRightEncoder);
+        deltaSide = (currentSideEncoder - oldSideEncoder);
+
+        oldLeftEncoder = currentLeftEncoder;
+        oldRightEncoder = currentRightEncoder;
+        oldSideEncoder = currentSideEncoder;
+
+        // double deltaLeftReset = (currentLeftEncoder - leftReset) * ENCODERTOINCHES;
+        // double deltaRightReset = (currentRightEncoder - rightReset) * ENCODERTOINCHES;
 
         // deltaLeft = 1;
         // deltaRight = -1;
         // theta = 0;
 
         // Calculate the change in angle
-        deltaTheta = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
+        thetaNew = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
 
-        //Accumulate the change in angle
-        theta += deltaTheta * 180 / M_PI;
-        double thetaRad = theta * M_PI / 180;
-
+        double i;
         double h;
         double h2;
-        double i;
-        if (deltaTheta)
+        if (thetaNew)
         {
-            double radius = deltaRight / deltaTheta;
-            i = deltaTheta / 2.0;
+
+            double r = deltaRight / thetaNew; // The radius of the circle the robot travel's around with the right side of the robot
+            i = thetaNew / 2.0;
             double sinI = sin(i);
+            h = ((r + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sinI) * 2.0;
 
-            h = ((radius + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sinI) * 2.0;
+            double r2 = deltaSide / thetaNew; // The radius of the circle the robot travel's around with the back of the robot
+            h2 = ((r2 + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sinI) * 2.0;
 
-            double radius2 = deltaSide / deltaTheta;
+            // h = ((deltaRight / thetaNew + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
 
-            h2 = ((radius2 + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sinI) * 2.0;
+            // h2 = ((deltaSide / thetaNew + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
         }
         else
         {
@@ -69,7 +99,8 @@ void odometry(void *odometryArgs)
             i = 0;
             h2 = deltaSide;
         }
-        double p = i + thetaRad;
+
+        double p = i + angle;
 
         double cosP = cos(p);
         double sinP = sin(p);
@@ -77,14 +108,15 @@ void odometry(void *odometryArgs)
         yPos += h * cosP;
         xPos += h * sinP;
 
-        yPos += h2 * -sinP;
-        xPos += h2 * cosP;
+        yPos += h2 * -sinP; // -sin(x) = sin(-x)
+        xPos += h2 * cosP;  // cos(x) = cos(-x)
 
-        leftEncoder.reset_position();
-        rightEncoder.reset_position();
-        sideEncoder.reset_position();
+        angle += thetaNew;
 
-        pros::lcd::set_text(5, "Rotation: " + std::to_string(theta));
+        pros::lcd::set_text(1, "h: " + std::to_string(deltaTheta));
+
+        pros::lcd::set_text(4, "L: " + std::to_string(oldLeftEncoder) + " R: " + std::to_string(oldRightEncoder));
+        pros::lcd::set_text(5, "Rotation: " + std::to_string(angle * 180 / M_PI));
         pros::lcd::set_text(6, "X pos: " + std::to_string(xPos));
         pros::lcd::set_text(7, "Y pos: " + std::to_string(yPos));
         pros::delay(10);
