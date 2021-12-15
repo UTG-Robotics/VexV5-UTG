@@ -44,6 +44,8 @@ void odometry(void *odometryArgs)
     double theta = 0;
     double thetaNew = 0;
 
+    double radius = 0;
+
     leftEncoder.reset();
     rightEncoder.reset();
     sideEncoder.reset();
@@ -53,11 +55,11 @@ void odometry(void *odometryArgs)
     while (true)
     {
         // Get the current encoder values in degrees
-        currentLeftEncoder = leftEncoder.get_position() * ENCODERTOINCHES;
+        currentLeftEncoder = -leftEncoder.get_position() * ENCODERTOINCHES;
         currentRightEncoder = rightEncoder.get_position() * ENCODERTOINCHES;
         currentSideEncoder = sideEncoder.get_position() * ENCODERTOINCHES;
 
-        deltaLeft = -(currentLeftEncoder - oldLeftEncoder);
+        deltaLeft = (currentLeftEncoder - oldLeftEncoder);
         deltaRight = (currentRightEncoder - oldRightEncoder);
         deltaSide = (currentSideEncoder - oldSideEncoder);
 
@@ -73,48 +75,66 @@ void odometry(void *odometryArgs)
         // theta = 0;
 
         // Calculate the change in angle
-        thetaNew = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
-
+        thetaNew = (currentLeftEncoder - currentRightEncoder) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
+        // thetaNew = 0;
+        deltaTheta = thetaNew - angle;
         double i;
-        double h;
-        double h2;
-        if (thetaNew)
+        double deltaX;
+        double deltaY;
+        deltaSide = deltaSide - ((OdometryArgs *)odometryArgs)->sideWheelDistance * deltaTheta;
+
+        if (deltaTheta)
         {
 
-            double r = deltaRight / thetaNew; // The radius of the circle the robot travel's around with the right side of the robot
-            i = thetaNew / 2.0;
+            i = deltaTheta / 2.0;
             double sinI = sin(i);
-            h = ((r + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sinI) * 2.0;
 
-            double r2 = deltaSide / thetaNew; // The radius of the circle the robot travel's around with the back of the robot
-            h2 = ((r2 + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sinI) * 2.0;
+            deltaX = (2.0 * sinI) * ((deltaRight / deltaTheta + ((OdometryArgs *)odometryArgs)->rightWheelDistance));
+            deltaY = (2.0 * sinI) * ((deltaSide / deltaTheta + ((OdometryArgs *)odometryArgs)->sideWheelDistance));
 
-            // h = ((deltaRight / thetaNew + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
+            // deltaX = ((deltaRight / thetaNew + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
 
-            // h2 = ((deltaSide / thetaNew + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
+            // deltaY = ((deltaSide / thetaNew + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
         }
         else
         {
-            h = deltaRight;
+            deltaX = deltaRight;
             i = 0;
-            h2 = deltaSide;
+            deltaY = deltaSide;
         }
 
-        double p = i + angle;
+        double thetaM = i + angle;
 
-        double cosP = cos(p);
-        double sinP = sin(p);
+        // theta = atan2f(deltaY, deltaX);
+        // radius = sqrt(deltaX * deltaX + deltaY * deltaY);
+        // theta = theta - thetaM; //step 10
+        // deltaX = radius * cos(theta);
+        // deltaY = radius * sin(theta);
 
-        yPos += h * cosP;
-        xPos += h * sinP;
+        // thetaNew += M_PI;
+        // while (thetaNew <= 0)
+        // {
+        //     thetaNew += 2 * M_PI;
+        // }
+        // thetaNew = modulo(thetaNew, 2 * M_PI);
+        // thetaNew -= M_PI;
 
-        yPos += h2 * -sinP; // -sin(x) = sin(-x)
-        xPos += h2 * cosP;  // cos(x) = cos(-x)
+        double cosP = cos(thetaM);
+        double sinP = sin(thetaM);
 
-        angle += thetaNew;
+        yPos += deltaX * cosP;
+        xPos += deltaX * sinP;
 
-        pros::lcd::set_text(1, "h: " + std::to_string(deltaTheta));
+        yPos += deltaY * -sinP; // -sin(x) = sin(-x)
+        xPos += deltaY * cosP;  // cos(x) = cos(-x)
 
+        angle = thetaNew;
+
+        // xPos = xPos - deltaX; //step 11
+        // yPos = yPos + deltaY;
+
+        pros::lcd::set_text(1, "h: " + std::to_string(radius));
+        printf("thetaNew: %f    deltaTheta: %f    deltaX: %f    deltaY: %f    Radius: %f\n", thetaNew, deltaTheta, deltaX, deltaY, radius);
         pros::lcd::set_text(4, "L: " + std::to_string(oldLeftEncoder) + " R: " + std::to_string(oldRightEncoder));
         pros::lcd::set_text(5, "Rotation: " + std::to_string(angle * 180 / M_PI));
         pros::lcd::set_text(6, "X pos: " + std::to_string(xPos));

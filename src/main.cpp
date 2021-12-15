@@ -19,7 +19,7 @@ void initialize()
 	//Increasing distance increases overshoot
 	odometryArgs->leftWheelDistance = 6.27;
 	odometryArgs->rightWheelDistance = 6.27;
-	odometryArgs->sideWheelDistance = 5.0;
+	odometryArgs->sideWheelDistance = 6.0;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -83,7 +83,7 @@ void opcontrol()
 	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
 	// driveToPoint(0, 12, 90);
-	driveForward(12);
+	// driveForward(12);
 	while (true)
 	{
 		//Get Joystick Values
