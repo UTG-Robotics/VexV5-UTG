@@ -72,10 +72,23 @@ void autonomous() {}
 void opcontrol()
 {
 	// pros::lcd::set_text(7, std::to_string(theta));
-	// pros::Rotation leftEncoder(12);
-	// pros::Rotation rightEncoder(3);
-	// pros::Rotation sideEncoder(19);
+	pros::Rotation leftEncoder(12);
+	pros::Rotation rightEncoder(3);
+	pros::Rotation sideEncoder(19);
 
+	for (int i = 0; i < 10; i++)
+	{
+		leftEncoder.reset();
+		rightEncoder.reset();
+		sideEncoder.reset();
+		leftEncoder.reset_position();
+		rightEncoder.reset_position();
+		sideEncoder.reset_position();
+		xPos = 0;
+		yPos = 0;
+		angle = 0;
+		pros::delay(100);
+	}
 	// Initialize the drivetrains
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::Motor front_right_mtr(10);
