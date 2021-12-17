@@ -19,7 +19,7 @@ void initialize()
 	//Increasing distance increases overshoot
 	odometryArgs->leftWheelDistance = 6.27;
 	odometryArgs->rightWheelDistance = 6.27;
-	odometryArgs->sideWheelDistance = 6.0;
+	odometryArgs->sideWheelDistance = 1.0;
 
 	pros::Task odometry_task(odometry, odometryArgs);
 
@@ -72,6 +72,10 @@ void autonomous() {}
 void opcontrol()
 {
 	// pros::lcd::set_text(7, std::to_string(theta));
+	// pros::Rotation leftEncoder(12);
+	// pros::Rotation rightEncoder(3);
+	// pros::Rotation sideEncoder(19);
+
 	// Initialize the drivetrains
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::Motor front_right_mtr(10);
@@ -109,6 +113,8 @@ void opcontrol()
 		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+
+		// printf("x:%f    y:%f    theta:%f\n", chassis->getState().x.convert(inch), chassis->getState().y.convert(inch), chassis->getState().theta.convert(degree));
 
 		// pros::lcd::set_text(7, std::to_string(theta));
 		pros::delay(20);
