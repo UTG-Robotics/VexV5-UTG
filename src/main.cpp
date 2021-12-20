@@ -56,6 +56,25 @@ void competition_initialize() {}
 void autonomous() {}
 
 /**
+Our auton, who art in c++,
+    called by thy  name;
+  thy operating system run;
+thy program run correctly
+  as it did in testing.
+Give us this day our daily miracle.
+And forgive us our sketchy autonomous,
+    as we forgive cooper
+  who writes broken code.
+And lead us not into defeat;
+  but deliver us from coding at the tournament.
+    For thine is the awp,
+the odometry, and the tracking,
+  leading us, our robot, 
+    to victory.
+      Return;
+**/
+
+/**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
  * the Field Management System or the VEX Competition Switch in the operator
