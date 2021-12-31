@@ -57,7 +57,7 @@ void autonomous() {}
 
 /**
 Our auton, who art in c++,
-    called by thy  name;
+    called by thy name;
   thy operating system run;
 thy program run correctly
   as it did in testing.
