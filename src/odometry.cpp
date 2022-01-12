@@ -151,7 +151,7 @@ void odometry(void *odometryArgs)
                                                                 .withMotors(frontLeftMotor, frontRightMotor, backRightMotor, backLeftMotor)
                                                                 .withSensors(okapi::RotationSensor(12, true), okapi::RotationSensor(3), okapi::RotationSensor(19))
                                                                 .withDimensions(okapi::AbstractMotor::gearset::green, {{4_in, 11.5_in}, okapi::imev5GreenTPR}) //gearset, diameter, track, ticks
-                                                                .withOdometry({{2.75_in, 7_in, 6_in, 2.75_in}, 360})
+                                                                .withOdometry({{2.75_in, 14_in, 4_in, 2.75_in}, 360})
                                                                 .buildOdometry(); // build an odometry chassis
 
     while (true)
@@ -159,5 +159,7 @@ void odometry(void *odometryArgs)
         // updatePosition();
         printf("x: %f\n", chassis->getState().x.convert(okapi::inch));
         pros::delay(10);
+
+        //https://gm0.org/en/latest/docs/software/odometry.html How to odometry
     }
 }
