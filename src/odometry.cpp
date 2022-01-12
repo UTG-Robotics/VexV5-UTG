@@ -64,8 +64,6 @@ void updatePosition()
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (trackingDiameter / 2);
 
     lastLeftPos = curLeft;
-    lastRightPos = curRight; //step 3
-    lastSidePos = curSide;
 
     deltaLr = (curLeft - leftAtReset) * (M_PI / 180) * (wheelDiameter / 2); //step 4
     deltaRr = (curRight - rightAtReset) * (M_PI / 180) * (wheelDiameter / 2);
@@ -80,7 +78,7 @@ void updatePosition()
 
     deltaTheta = thetaNew - angle; //step 6
 
-    deltaSide = deltaSide - Ss * deltaTheta;
+    // deltaSide = deltaSide - Ss * deltaTheta;
 
     if (deltaTheta == 0)
     {
@@ -93,40 +91,34 @@ void updatePosition()
         deltaY = (2 * sin(deltaTheta / 2)) * (deltaRight / deltaTheta + Sr);
     }
 
-    thetaM = angle + deltaTheta / 2; //step 9
+    // thetaM = angle + deltaTheta / 2; //step 9
 
-    // if (deltaX == 0) {
-    //   if (deltaY > 0) {
-    //     theta = M_PI/2;
-    //   }
-    //   else if (deltaY < 0) {
-    //     theta = 3*M_PI/2;
-    //   }
-    //   else {
-    //     theta = 0;
-    //   }
-    // }
-    // else {
-    //   theta = atan(deltaY/deltaX);
-    // }
-    theta = atan2(deltaY, deltaX);
-    radius = sqrt(deltaX * deltaX + deltaY * deltaY);
-    theta = theta - thetaM; //step 10
-    deltaX = radius * cos(theta);
-    deltaY = radius * sin(theta);
+    // theta = atan2(deltaY, deltaX);
+    // radius = sqrt(deltaX * deltaX + deltaY * deltaY);
+    // theta = theta - thetaM; //step 10
+    // deltaX = radius * cos(theta);
+    // deltaY = radius * sin(theta);
 
-    thetaNew += M_PI;
-    while (thetaNew <= 0)
-    {
-        thetaNew += 2 * M_PI;
-    }
-    thetaNew = modulo(thetaNew, 2 * M_PI);
-    thetaNew -= M_PI;
+    // xPos = xPos - deltaX; //step 11
+    // yPos = yPos + deltaY;
+
+    float p = (thetaNew / 2) + angle; // The global ending angle of the robot
+
+    float cosP = cos(p);
+    float sinP = sin(p);
+
+    yPos += deltaY * cosP;
+    xPos += deltaY * sinP;
+
+    yPos += deltaX * -sinP; // -sin(x) = sin(-x)
+    xPos += deltaX * cosP;  // cos(x) = cos(-x)
 
     angle = thetaNew;
-    xPos = xPos - deltaX * (10 / ((uint32_t)pros::millis() - (uint32_t)lastTime)); //step 11
-    yPos = yPos + deltaY;
     printf("x: %f, y: %f, theta: %f, deltaX: %f, deltaY: %f    time:%i\n", xPos, yPos, angle, deltaX, deltaY, ((uint32_t)pros::millis() - (uint32_t)lastTime));
+    lastLeftPos = curLeft;
+    lastRightPos = curRight;
+    lastSidePos = curSide;
+
     lastTime = pros::millis();
 }
 void odometry(void *odometryArgs)
@@ -140,135 +132,32 @@ void odometry(void *odometryArgs)
     xPos = 0;
     yPos = 0;
     angle = 0;
+    // pros::Motor front_right_mtr(10);
+    // pros::Motor front_left_mtr(1);
+    // pros::Motor back_right_mtr(20);
+    // pros::Motor back_left_mtr(11);
 
-    // pros::Rotation leftEncoder(((OdometryArgs *)odometryArgs)->leftEncoderPort);
-    // pros::Rotation rightEncoder(((OdometryArgs *)odometryArgs)->rightEncoderPort);
-    // pros::Rotation sideEncoder(((OdometryArgs *)odometryArgs)->sideEncoderPort);
+    okapi::Motor frontLeftMotor(1, false, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
+    okapi::Motor frontRightMotor(10, true, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
+    okapi::Motor backRightMotor(20, true, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
+    okapi::Motor backLeftMotor(11, false, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
 
-    // // pros::Rotation sideEncoder(12);to_string
+    pros::Rotation leftEncoder(12);
+    leftEncoder.set_reversed(true);
+    pros::Rotation rightEncoder(3);
+    pros::Rotation sideEncoder(19);
 
-    // // pros::lcd::print(7, "%p", (((OdometryArgs *)odometryArgs)->theta));
-
-    // const double ENCODERTOINCHES = 0.00023998277;
-    // double leftReset = 0;
-    // double rightReset = 0;
-    // double thetaReset = 0;
-
-    // double currentLeftEncoder = leftEncoder.get_position();
-    // double currentRightEncoder = rightEncoder.get_position();
-    // double currentSideEncoder = sideEncoder.get_position();
-
-    // double oldLeftEncoder = 0;
-    // double oldRightEncoder = 0;
-    // double oldSideEncoder = 0;
-
-    // double deltaLeft = 0;
-    // double deltaRight = 0;
-    // double deltaSide = 0;
-    // double deltaTheta = 0;
-
-    // double theta = 0;
-    // double thetaNew = 0;
-
-    // double radius = 0;
-
-    // leftEncoder.reset();
-    // rightEncoder.reset();
-    // sideEncoder.reset();
-    // leftEncoder.reset_position();
-    // rightEncoder.reset_position();
-    // sideEncoder.reset_position();
-    // while (true)
-    // {
-    //     // Get the current encoder values in degrees
-    //     currentLeftEncoder = -leftEncoder.get_position() * ENCODERTOINCHES;
-    //     currentRightEncoder = rightEncoder.get_position() * ENCODERTOINCHES;
-    //     currentSideEncoder = sideEncoder.get_position() * ENCODERTOINCHES;
-
-    //     deltaLeft = (currentLeftEncoder - oldLeftEncoder);
-    //     deltaRight = (currentRightEncoder - oldRightEncoder);
-    //     deltaSide = (currentSideEncoder - oldSideEncoder);
-
-    //     oldLeftEncoder = currentLeftEncoder;
-    //     oldRightEncoder = currentRightEncoder;
-    //     oldSideEncoder = currentSideEncoder;
-
-    //     // double deltaLeftReset = (currentLeftEncoder - leftReset) * ENCODERTOINCHES;
-    //     // double deltaRightReset = (currentRightEncoder - rightReset) * ENCODERTOINCHES;
-
-    //     // deltaLeft = 1;
-    //     // deltaRight = -1;
-    //     // theta = 0;
-
-    //     // Calculate the change in angle
-    //     deltaTheta = (deltaLeft - deltaRight) / (((OdometryArgs *)odometryArgs)->leftWheelDistance + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
-    //     // thetaNew = 0;
-    //     // deltaTheta = thetaNew - angle;
-    //     double i;
-    //     double deltaX;
-    //     double deltaY;
-    //     // deltaSide = deltaSide - ((OdometryArgs *)odometryArgs)->sideWheelDistance * deltaTheta;
-
-    //     if (deltaTheta)
-    //     {
-
-    //         i = deltaTheta / 2.0;
-    //         double sinI = sin(i);
-
-    //         deltaX = 2.0 * sin(deltaTheta / 2.0) * ((deltaRight / deltaTheta) + ((OdometryArgs *)odometryArgs)->rightWheelDistance);
-    //         deltaY = 2.0 * sin(deltaTheta / 2.0) * ((deltaSide / deltaTheta) + ((OdometryArgs *)odometryArgs)->sideWheelDistance);
-
-    //         // deltaX = ((deltaRight / thetaNew + ((OdometryArgs *)odometryArgs)->rightWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
-
-    //         // deltaY = ((deltaSide / thetaNew + ((OdometryArgs *)odometryArgs)->sideWheelDistance) * sin(thetaNew / 2.0)) * 2.0;
-    //     }
-    //     else
-    //     {
-    //         deltaX = deltaRight;
-    //         i = 0;
-    //         deltaY = deltaSide;
-    //     }
-
-    //     double thetaM = i + angle;
-
-    //     theta = atan2(deltaY, deltaX);
-    //     radius = sqrt(deltaX * deltaX + deltaY * deltaY);
-    //     theta -= thetaM; //step 10
-    //     deltaX = radius * cos(theta);
-    //     deltaY = radius * sin(theta);
-
-    //     // thetaNew += M_PI;
-    //     // while (thetaNew <= 0)
-    //     // {
-    //     //     thetaNew += 2 * M_PI;
-    //     // }
-    //     // thetaNew = modulo(thetaNew, 2 * M_PI);
-    //     // thetaNew -= M_PI;
-
-    //     // double cosP = cos(thetaM);
-    //     // double sinP = sin(thetaM);
-
-    //     yPos += deltaY;
-    //     xPos += deltaX;
-
-    //     // yPos += deltaY * -sinP; // -sin(x) = sin(-x)
-    //     // xPos += deltaY * cosP;  // cos(x) = cos(-x)
-
-    //     angle += deltaTheta;
-
-    //     // xPos = xPos - deltaX; //step 11
-    //     // yPos = yPos + deltaY;
-
-    //     pros::lcd::set_text(1, "h: " + std::to_string(radius));
-    //     printf("deltaTheta: %f    deltaX: %f    deltaY: %f    Radius: %f\n", deltaTheta, deltaX, deltaY, radius);
-    //     pros::lcd::set_text(4, "L: " + std::to_string(oldLeftEncoder) + " R: " + std::to_string(oldRightEncoder));
-    //     pros::lcd::set_text(5, "Rotation: " + std::to_string(angle * 180 / M_PI));
-    //     pros::lcd::set_text(6, "X pos: " + std::to_string(xPos));
-    //     pros::lcd::set_text(7, "Y pos: " + std::to_string(yPos));
+    std::shared_ptr<okapi::OdomChassisController> chassis = okapi::ChassisControllerBuilder()
+                                                                .withMotors(frontLeftMotor, frontRightMotor, backRightMotor, backLeftMotor)
+                                                                .withSensors(okapi::RotationSensor(12, true), okapi::RotationSensor(3), okapi::RotationSensor(19))
+                                                                .withDimensions(okapi::AbstractMotor::gearset::green, {{4_in, 11.5_in}, okapi::imev5GreenTPR}) //gearset, diameter, track, ticks
+                                                                .withOdometry({{2.75_in, 7_in, 6_in, 2.75_in}, 360})
+                                                                .buildOdometry(); // build an odometry chassis
 
     while (true)
     {
-        updatePosition();
+        // updatePosition();
+        printf("x: %f\n", chassis->getState().x.convert(okapi::inch));
         pros::delay(10);
     }
 }
