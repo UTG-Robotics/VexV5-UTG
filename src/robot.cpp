@@ -90,10 +90,10 @@ void driveForward(double inches)
 
     const double ENCODERTOINCHES = 0.00024;
 
-    double start = sideEncoder.get_position() * ENCODERTOINCHES;
+    double start = yPos;
 
     double pos;
-    double error = start - (start - inches);
+    double error = start - (start + inches);
     double lastError = error;
     double speed = 0;
     double finishTimer = 0;
@@ -107,8 +107,7 @@ void driveForward(double inches)
 
     while (true)
     {
-        pos = sideEncoder.get_position() * ENCODERTOINCHES;
-        error = pos - (start - inches);
+        error = yPos - (start + inches);
         if (Ki != 0)
         {
             if (abs(error) < 0.5)
@@ -135,12 +134,12 @@ void driveForward(double inches)
         speed = Kp * error + Ki * integral + Kd * derivative;
         speed = std::min(speed, 60.0);
         speed = std::max(speed, -60.0);
-        pros::lcd::set_text(1, std::to_string(speed));
+        pros::lcd::set_text(1, std::to_string(error));
 
-        front_left_mtr.move_velocity(speed);
-        front_right_mtr.move_velocity(-speed);
-        back_left_mtr.move_velocity(speed);
-        back_right_mtr.move_velocity(-speed);
+        front_left_mtr.move_velocity(-speed);
+        front_right_mtr.move_velocity(speed);
+        back_left_mtr.move_velocity(-speed);
+        back_right_mtr.move_velocity(speed);
         if (abs(error) < 0.5)
         {
             finishTimer += 1;
@@ -184,7 +183,8 @@ void driveToPoint(double x, double y, double targetAngle)
     double KiSpeed = 0.00;
     double KdSpeed = 0.0;
 
-    double KpAngle = 0.6;
+    // double KpAngle = 0.6;
+    double KpAngle = 0.0;
     double KiAngle = 0.0;
     double KdAngle = 0.0;
 
@@ -279,33 +279,27 @@ void driveToPoint(double x, double y, double targetAngle)
         xSpeedPercent = sin(errorAngle * M_PI / 180);
         ySpeedPercent = cos(errorAngle * M_PI / 180);
 
-        multiplicationFactor = 1 / MAX(abs(xSpeedPercent), abs(ySpeedPercent));
+        //Motor power formula https://www.desmos.com/calculator/yyq3yvfn35
 
-        if (xSpeedPercent < 0)
-        {
-            xSpeedPercent *= -multiplicationFactor;
-        }
-        else
-        {
-            xSpeedPercent *= multiplicationFactor;
-        }
+        double driveAngle = atan2(x, y);
 
-        if (ySpeedPercent < 0)
-        {
-            ySpeedPercent *= -multiplicationFactor;
-        }
-        else
-        {
-            ySpeedPercent *= multiplicationFactor;
-        }
+        double limit = std::min(hypot(x, y), 1.0);
 
+        double pLeft = -cos(driveAngle + (M_PI / 4));
+
+        double pRight = -cos(driveAngle - (M_PI / 4));
         ySpeedPercent *= speedSpeed;
         xSpeedPercent *= speedSpeed;
 
-        front_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent + speedAngle);
-        front_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent + speedAngle);
-        back_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent - speedAngle);
-        back_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent - speedAngle);
+        // front_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent + speedAngle);
+        // front_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent + speedAngle);
+        // back_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent - speedAngle);
+        // back_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent - speedAngle);
+
+        front_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent);
+        front_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent);
+        back_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent);
+        back_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent);
 
         pros::lcd::set_text(2, "Y: " + std::to_string(ySpeedPercent) + " X: " + std::to_string(xSpeedPercent));
         pros::lcd::set_text(3, "distErr: " + std::to_string(errorSpeed));

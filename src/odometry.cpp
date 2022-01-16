@@ -73,8 +73,8 @@ void updatePosition()
 
     xPos += deltaX;
     yPos += deltaY;
-    angle += deltaTheta;
-    printf("x: %f, y: %f, theta: %f, deltaX: %f, deltaY: %f    time:%i\n", xPos, yPos, angle * 180 / M_PI, deltaX, deltaY, ((uint32_t)pros::millis() - (uint32_t)lastTime));
+    angle += deltaTheta * 180 / M_PI;
+    printf("x: %f, y: %f, theta: %f, deltaX: %f, deltaY: %f    time:%i\n", xPos, yPos, angle, deltaX, deltaY, ((uint32_t)pros::millis() - (uint32_t)lastTime));
     lastLeftPos = curLeft;
     lastRightPos = curRight;
     lastSidePos = curSide;
@@ -115,6 +115,7 @@ void odometry(void *odometryArgs)
                                                                 .buildOdometry(); // build an odometry chassis
     */
     leftEncoder.set_reversed(true);
+    sideEncoder.set_reversed(true);
 
     while (true)
     {

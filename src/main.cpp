@@ -118,7 +118,8 @@ void opcontrol()
 
 	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-	// driveToPoint(0, 12, 90);
+	driveToPoint(0, 12, 90);
+	// rotateToAngle(90);
 	// driveForward(12);
 	while (true)
 	{
