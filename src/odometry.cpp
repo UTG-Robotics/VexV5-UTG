@@ -73,8 +73,8 @@ void updatePosition()
 
     xPos += deltaX;
     yPos += deltaY;
-    angle += deltaTheta * 180 / M_PI;
-    printf("x: %f, y: %f, theta: %f, deltaX: %f, deltaY: %f    time:%i\n", xPos, yPos, angle, deltaX, deltaY, ((uint32_t)pros::millis() - (uint32_t)lastTime));
+    angle += deltaTheta;
+    // printf("x: %f, y: %f, theta: %f, deltaX: %f, deltaY: %f    time:%i\n", xPos, yPos, angle * 180 / M_PI, deltaX, deltaY, ((uint32_t)pros::millis() - (uint32_t)lastTime));
     lastLeftPos = curLeft;
     lastRightPos = curRight;
     lastSidePos = curSide;
@@ -83,37 +83,10 @@ void updatePosition()
 }
 void odometry(void *odometryArgs)
 {
-    //     while (true)
-    //     {
-    //         updatePosition();
-    //         pros::Task::delay(20);
-    //     }
-    // }
     xPos = 0;
     yPos = 0;
     angle = 0;
-    // pros::Motor front_right_mtr(10);
-    // pros::Motor front_left_mtr(1);
-    // pros::Motor back_right_mtr(20);
-    // pros::Motor back_left_mtr(11);
-    /*
-    okapi::Motor frontLeftMotor(1, false, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
-    okapi::Motor frontRightMotor(10, true, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
-    okapi::Motor backRightMotor(20, true, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
-    okapi::Motor backLeftMotor(11, false, okapi::AbstractMotor::gearset::green, okapi::AbstractMotor::encoderUnits::degrees);
 
-    pros::Rotation leftEncoder(12);
-    leftEncoder.set_reversed(true);
-    pros::Rotation rightEncoder(3);
-    pros::Rotation sideEncoder(19);
-
-    std::shared_ptr<okapi::OdomChassisController> chassis = okapi::ChassisControllerBuilder()
-                                                                .withMotors(frontLeftMotor, frontRightMotor, backRightMotor, backLeftMotor)
-                                                                .withSensors(okapi::RotationSensor(12, true), okapi::RotationSensor(3), okapi::RotationSensor(19))
-                                                                .withDimensions(okapi::AbstractMotor::gearset::green, {{4_in, 11.5_in}, okapi::imev5GreenTPR}) //gearset, diameter, track, ticks
-                                                                .withOdometry({{2.75_in, 14_in, 4_in, 2.75_in}, 360})
-                                                                .buildOdometry(); // build an odometry chassis
-    */
     leftEncoder.set_reversed(true);
     sideEncoder.set_reversed(true);
 

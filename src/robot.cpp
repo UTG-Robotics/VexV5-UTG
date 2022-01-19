@@ -166,6 +166,7 @@ void driveForward(double inches)
 
 void driveToPoint(double x, double y, double targetAngle)
 {
+    x *= -1;
     pros::Motor front_right_mtr(10);
     pros::Motor front_left_mtr(1);
     pros::Motor back_right_mtr(20);
@@ -203,8 +204,8 @@ void driveToPoint(double x, double y, double targetAngle)
 
     while (true)
     {
-        xDiff = xPos - x;
-        yDiff = yPos - y;
+        xDiff = x - xPos;
+        yDiff = y - yPos;
 
         //Distance between the robot and the point
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
@@ -268,7 +269,7 @@ void driveToPoint(double x, double y, double targetAngle)
         speedSpeed = KpSpeed * errorSpeed + KiSpeed * integralSpeed + KdSpeed * derivativeSpeed;
         speedAngle = KpAngle * errorAngle + KiAngle * integralAngle + KdAngle * derivativeAngle;
 
-        double speedLimit = 10;
+        double speedLimit = 30;
 
         speedSpeed = std::min(speedSpeed, speedLimit);
         speedSpeed = std::max(speedSpeed, -speedLimit);
@@ -276,33 +277,35 @@ void driveToPoint(double x, double y, double targetAngle)
         speedAngle = std::min(speedAngle, speedLimit);
         speedAngle = std::max(speedAngle, -speedLimit);
 
-        xSpeedPercent = sin(errorAngle * M_PI / 180);
-        ySpeedPercent = cos(errorAngle * M_PI / 180);
-
         //Motor power formula https://www.desmos.com/calculator/yyq3yvfn35
 
-        double driveAngle = atan2(x, y);
+        double rotationRatio = 0;
 
-        double limit = std::min(hypot(x, y), 1.0);
+        double driveAngle = atan2(-x + xPos, -y + yPos) + angle + M_PI / 2;
 
-        double pLeft = -cos(driveAngle + (M_PI / 4));
+        double power = speedSpeed;
+        // double power = speedSpeed;
 
-        double pRight = -cos(driveAngle - (M_PI / 4));
+        double xRatio = -cos(driveAngle + (M_PI / 4));
+
+        double yRatio = sin(driveAngle + (M_PI / 4));
+
+        double limitRatio = std::max(abs(xRatio), abs(yRatio)) / power;
+
+        double xPower = (xRatio / limitRatio) * (1 - abs(rotationRatio)) - rotationRatio * limitRatio;
+        double yPower = (yRatio / limitRatio) * (1 - abs(rotationRatio)) + rotationRatio * limitRatio;
+
         ySpeedPercent *= speedSpeed;
         xSpeedPercent *= speedSpeed;
 
-        // front_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent + speedAngle);
-        // front_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent + speedAngle);
-        // back_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent - speedAngle);
-        // back_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent - speedAngle);
+        front_right_mtr.move_velocity(xPower);
+        front_left_mtr.move_velocity(-yPower);
+        back_right_mtr.move_velocity(yPower);
+        back_left_mtr.move_velocity(-xPower);
 
-        front_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent);
-        front_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent);
-        back_right_mtr.move_velocity(-ySpeedPercent + xSpeedPercent);
-        back_left_mtr.move_velocity(ySpeedPercent + xSpeedPercent);
-
-        pros::lcd::set_text(2, "Y: " + std::to_string(ySpeedPercent) + " X: " + std::to_string(xSpeedPercent));
+        pros::lcd::set_text(2, "Y: " + std::to_string(yDiff) + " X: " + std::to_string(xDiff));
         pros::lcd::set_text(3, "distErr: " + std::to_string(errorSpeed));
+        printf("driveAngle: %f, x: %f, y: %f, angle: %f\n", driveAngle, xPos, yPos, angle);
         if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
         {
             finishTimer += 1;

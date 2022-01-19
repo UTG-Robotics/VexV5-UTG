@@ -117,8 +117,9 @@ void opcontrol()
 	pros::Motor arm_mtr(9);
 
 	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-
-	driveToPoint(0, 12, 90);
+	pros::lcd::set_text(1, "Calibrated");
+	pros::delay(3000);
+	driveToPoint(0, 12, 0);
 	// rotateToAngle(90);
 	// driveForward(12);
 	while (true)
