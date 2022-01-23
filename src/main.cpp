@@ -10,19 +10,10 @@ double angle = 0;
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
 void initialize()
 {
-	OdometryArgs *odometryArgs = new OdometryArgs();
-	odometryArgs->leftEncoderPort = 12;
-	odometryArgs->rightEncoderPort = 3;
-	odometryArgs->sideEncoderPort = 19;
-	//Increasing distance increases overshoot
-	odometryArgs->leftWheelDistance = 6.27;
-	odometryArgs->rightWheelDistance = 6.27;
-	odometryArgs->sideWheelDistance = 1.0;
-
-	pros::Task odometry_task(odometry, odometryArgs);
-
+	pros::Task odometry_task(odometry);
 	pros::lcd::initialize();
 }
 
@@ -63,7 +54,7 @@ thy program run correctly
   as it did in testing.
 Give us this day our daily miracle.
 And forgive us our sketchy autonomous,
-    as we forgive cooper
+    as we forgive Cooper
   who writes broken code.
 And lead us not into defeat;
   but deliver us from coding at the tournament.
@@ -90,7 +81,7 @@ the odometry, and the tracking,
 
 void opcontrol()
 {
-	// pros::lcd::set_text(7, std::to_string(theta));
+
 	pros::Rotation leftEncoder(12);
 	pros::Rotation rightEncoder(3);
 	pros::Rotation sideEncoder(19);
@@ -108,6 +99,7 @@ void opcontrol()
 		angle = 0;
 		pros::delay(100);
 	}
+
 	// Initialize the drivetrains
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::Motor front_right_mtr(10);
@@ -119,9 +111,8 @@ void opcontrol()
 	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	pros::lcd::set_text(1, "Calibrated");
 	pros::delay(3000);
-	driveToPoint(0, 12, 0);
-	// rotateToAngle(90);
-	// driveForward(12);
+	driveToPoint(12, 12, 90);
+	driveToPoint(0, 0, 0);
 	while (true)
 	{
 		//Get Joystick Values
@@ -129,6 +120,7 @@ void opcontrol()
 		int joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
 		int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
 
+		//Control arm
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
 		{
 			arm_mtr.move(50);
@@ -148,17 +140,6 @@ void opcontrol()
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
-		// printf("x:%f    y:%f    theta:%f\n", chassis->getState().x.convert(inch), chassis->getState().y.convert(inch), chassis->getState().theta.convert(degree));
-
-		// pros::lcd::set_text(7, std::to_string(theta));
 		pros::delay(20);
 	}
-
-	// rotateToAngle(1080);
-	// driveToPoint(0, 0, 90);
-
-	// 	front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
-	// 	front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
-	// 	back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
-	// 	back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 }

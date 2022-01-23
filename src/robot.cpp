@@ -172,10 +172,10 @@ void driveToPoint(double x, double y, double targetAngle)
     pros::Motor back_right_mtr(20);
     pros::Motor back_left_mtr(11);
 
-    double errorSpeed = x - xPos;
-    double errorAngle = targetAngle - angle;
-    double lastErrorSpeed = errorSpeed;
-    double lastErrorAngle = errorAngle;
+    double errorSpeed;
+    double errorAngle;
+    double lastErrorSpeed;
+    double lastErrorAngle;
     double speedSpeed = 0;
     double speedAngle = 0;
     double finishTimer = 0;
@@ -184,20 +184,25 @@ void driveToPoint(double x, double y, double targetAngle)
     double KiSpeed = 0.00;
     double KdSpeed = 0.0;
 
-    // double KpAngle = 0.6;
     double KpAngle = 0.0;
     double KiAngle = 0.0;
     double KdAngle = 0.0;
+
+    double speedLimit = 60;
+
+    double driveAngle;
+    double maxRatio;
+    double xRatio;
+    double yRatio;
+
+    double xPowerPercentage;
+    double yPowerPercentage;
 
     double integralSpeed = 0;
     double integralAngle = 0;
 
     double derivativeSpeed = 0;
     double derivativeAngle = 0;
-
-    double multiplicationFactor = 0;
-    double xSpeedPercent = 0;
-    double ySpeedPercent = 0;
 
     double xDiff = 0;
     double yDiff = 0;
@@ -269,44 +274,31 @@ void driveToPoint(double x, double y, double targetAngle)
         speedSpeed = KpSpeed * errorSpeed + KiSpeed * integralSpeed + KdSpeed * derivativeSpeed;
         speedAngle = KpAngle * errorAngle + KiAngle * integralAngle + KdAngle * derivativeAngle;
 
-        double speedLimit = 30;
-
         speedSpeed = std::min(speedSpeed, speedLimit);
         speedSpeed = std::max(speedSpeed, -speedLimit);
 
         speedAngle = std::min(speedAngle, speedLimit);
         speedAngle = std::max(speedAngle, -speedLimit);
 
-        //Motor power formula https://www.desmos.com/calculator/yyq3yvfn35
+        driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
 
-        double rotationRatio = 0;
+        xRatio = -cos(driveAngle + (M_PI / 4));
+        yRatio = sin(driveAngle + (M_PI / 4));
 
-        double driveAngle = atan2(-x + xPos, -y + yPos) + angle + M_PI / 2;
+        maxRatio = std::max(abs(xRatio), abs(yRatio));
 
-        double power = speedSpeed;
-        // double power = speedSpeed;
+        xPowerPercentage = (xRatio / limitRatio);
+        yPowerPercentage = (yRatio / limitRatio);
 
-        double xRatio = -cos(driveAngle + (M_PI / 4));
+        front_right_mtr.move_velocity(-xPowerPercentage * speedSpeed);
+        front_left_mtr.move_velocity(yPowerPercentage * speedSpeed);
+        back_right_mtr.move_velocity(-yPowerPercentage * speedSpeed);
+        back_left_mtr.move_velocity(xPowerPercentage * speedSpeed);
 
-        double yRatio = sin(driveAngle + (M_PI / 4));
+        pros::lcd::set_text(4, "distErr: " + std::to_string(errorSpeed));
 
-        double limitRatio = std::max(abs(xRatio), abs(yRatio)) / power;
-
-        double xPower = (xRatio / limitRatio) * (1 - abs(rotationRatio)) - rotationRatio * limitRatio;
-        double yPower = (yRatio / limitRatio) * (1 - abs(rotationRatio)) + rotationRatio * limitRatio;
-
-        ySpeedPercent *= speedSpeed;
-        xSpeedPercent *= speedSpeed;
-
-        front_right_mtr.move_velocity(xPower);
-        front_left_mtr.move_velocity(-yPower);
-        back_right_mtr.move_velocity(yPower);
-        back_left_mtr.move_velocity(-xPower);
-
-        pros::lcd::set_text(2, "Y: " + std::to_string(yDiff) + " X: " + std::to_string(xDiff));
-        pros::lcd::set_text(3, "distErr: " + std::to_string(errorSpeed));
-        printf("driveAngle: %f, x: %f, y: %f, angle: %f\n", driveAngle, xPos, yPos, angle);
-        if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
+        // if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
+        if (abs(errorSpeed) < 0.5)
         {
             finishTimer += 1;
         }
