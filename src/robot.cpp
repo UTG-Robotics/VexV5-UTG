@@ -2,10 +2,10 @@
 
 void rotateToAngle(double targetAngle)
 {
-    pros::Motor front_right_mtr(10);
-    pros::Motor front_left_mtr(1);
-    pros::Motor back_right_mtr(20);
-    pros::Motor back_left_mtr(11);
+    pros::Motor front_right_mtr(6);
+    pros::Motor front_left_mtr(5);
+    pros::Motor back_right_mtr(16);
+    pros::Motor back_left_mtr(15);
 
     double error = targetAngle - angle;
     double lastError = error;
@@ -79,14 +79,14 @@ void rotateToAngle(double targetAngle)
 
 void driveForward(double inches)
 {
-    pros::Rotation leftEncoder(12);
-    pros::Rotation rightEncoder(3);
-    pros::Rotation sideEncoder(19);
+    pros::Rotation leftEncoder(11);
+    pros::Rotation rightEncoder(20);
+    pros::Rotation sideEncoder(7);
 
-    pros::Motor front_right_mtr(10);
-    pros::Motor front_left_mtr(1);
-    pros::Motor back_right_mtr(20);
-    pros::Motor back_left_mtr(11);
+    pros::Motor front_right_mtr(6);
+    pros::Motor front_left_mtr(5);
+    pros::Motor back_right_mtr(16);
+    pros::Motor back_left_mtr(15);
 
     const double ENCODERTOINCHES = 0.00024;
 
@@ -166,11 +166,12 @@ void driveForward(double inches)
 
 void driveToPoint(double x, double y, double targetAngle)
 {
-    x *= -1;
-    pros::Motor front_right_mtr(10);
-    pros::Motor front_left_mtr(1);
-    pros::Motor back_right_mtr(20);
-    pros::Motor back_left_mtr(11);
+    // x *= -1;
+    // y *= -1;
+    pros::Motor front_right_mtr(6);
+    pros::Motor front_left_mtr(5);
+    pros::Motor back_right_mtr(16);
+    pros::Motor back_left_mtr(15);
 
     double errorSpeed;
     double errorAngle;
@@ -207,9 +208,11 @@ void driveToPoint(double x, double y, double targetAngle)
     double xDiff = 0;
     double yDiff = 0;
 
+    int i = 0;
+
     while (true)
     {
-        xDiff = x - xPos;
+        xDiff = -x - xPos;
         yDiff = y - yPos;
 
         //Distance between the robot and the point
@@ -280,15 +283,15 @@ void driveToPoint(double x, double y, double targetAngle)
         speedAngle = std::min(speedAngle, speedLimit);
         speedAngle = std::max(speedAngle, -speedLimit);
 
-        driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
+        driveAngle = atan2(x - -xPos, y - yPos) + angle + M_PI / 2;
 
         xRatio = -cos(driveAngle + (M_PI / 4));
         yRatio = sin(driveAngle + (M_PI / 4));
 
         maxRatio = std::max(abs(xRatio), abs(yRatio));
 
-        xPowerPercentage = (xRatio / limitRatio);
-        yPowerPercentage = (yRatio / limitRatio);
+        xPowerPercentage = (xRatio / maxRatio);
+        yPowerPercentage = (yRatio / maxRatio);
 
         front_right_mtr.move_velocity(-xPowerPercentage * speedSpeed);
         front_left_mtr.move_velocity(yPowerPercentage * speedSpeed);
@@ -310,6 +313,12 @@ void driveToPoint(double x, double y, double targetAngle)
         {
             break;
         }
+        i++;
+        if (i % 5 == 0)
+        {
+            printf("%f %f %f %f %f %f %f %f %f\n", xPowerPercentage, yPowerPercentage, xDiff, yDiff, errorSpeed, driveAngle, xPos, yPos, angle);
+        }
+
         pros::delay(15);
     }
     pros::lcd::set_text(1, "Finished");

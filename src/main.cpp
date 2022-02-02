@@ -82,11 +82,14 @@ the odometry, and the tracking,
 void opcontrol()
 {
 
-	pros::Rotation leftEncoder(12);
-	pros::Rotation rightEncoder(3);
-	pros::Rotation sideEncoder(19);
+	pros::Rotation leftEncoder(11);
+	pros::Rotation rightEncoder(20);
+	pros::Rotation sideEncoder(7);
+	pros::IMU gyro(13);
+	// gyro.reset();
 
-	for (int i = 0; i < 10; i++)
+	printf("gyro reset");
+	for (int i = 0; i < 1; i++)
 	{
 		leftEncoder.reset();
 		rightEncoder.reset();
@@ -102,17 +105,37 @@ void opcontrol()
 
 	// Initialize the drivetrains
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
-	pros::Motor front_right_mtr(10);
-	pros::Motor front_left_mtr(1);
-	pros::Motor back_right_mtr(20);
-	pros::Motor back_left_mtr(11);
-	pros::Motor arm_mtr(9);
+	pros::Motor front_right_mtr(6);
+	pros::Motor front_left_mtr(5);
+	pros::Motor back_right_mtr(16);
+	pros::Motor back_left_mtr(15);
+	// pros::Motor arm_mtr(9);
 
-	arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	// front_right_mtr.move_velocity(-50);
+	// back_left_mtr.move_velocity(50);
+
+	// pros::delay(7500);
+
+	// front_right_mtr.move_velocity(0);
+	// back_left_mtr.move_velocity(0);
+
+	// front_left_mtr.move_velocity(50);
+	// front_right_mtr.move_velocity(50);
+	// back_left_mtr.move_velocity(-50);
+	// back_right_mtr.move_velocity(-50);
+
+	// pros::delay(5000);
+
+	// front_left_mtr.move_velocity(0);
+	// front_right_mtr.move_velocity(0);
+	// back_left_mtr.move_velocity(0);
+	// back_right_mtr.move_velocity(0);
+
+	// arm_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	pros::lcd::set_text(1, "Calibrated");
-	pros::delay(3000);
-	driveToPoint(12, 12, 90);
-	driveToPoint(0, 0, 0);
+	// pros::delay(3000);
+	driveToPoint(12, 12, 0);
+	// driveToPoint(0, 0, 0);
 	while (true)
 	{
 		//Get Joystick Values
@@ -121,18 +144,18 @@ void opcontrol()
 		int joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
 
 		//Control arm
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
-		{
-			arm_mtr.move(50);
-		}
-		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
-		{
-			arm_mtr.move(-127);
-		}
-		else
-		{
-			arm_mtr.move(0);
-		}
+		// if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		// {
+		// 	arm_mtr.move(50);
+		// }
+		// else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		// {
+		// 	arm_mtr.move(-127);
+		// }
+		// else
+		// {
+		// 	arm_mtr.move(0);
+		// }
 
 		// Motor speed control
 		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
