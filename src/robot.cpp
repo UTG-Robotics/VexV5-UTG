@@ -7,13 +7,13 @@ void rotateToAngle(double targetAngle)
     pros::Motor back_right_mtr(16);
     pros::Motor back_left_mtr(15);
 
-    double error = targetAngle - angle;
+    double error = targetAngle - angle * 180 / M_PI;
     double lastError = error;
     double speed = 0;
     double finishTimer = 0;
 
-    double Kp = 0.6;
-    double Ki = 0.01;
+    double Kp = 1;
+    double Ki = 0.03;
     double Kd = 0.05;
 
     double integral = 0;
@@ -21,7 +21,7 @@ void rotateToAngle(double targetAngle)
 
     while (true)
     {
-        error = angle - targetAngle;
+        error = angle * 180 / M_PI - targetAngle;
         if (Ki != 0)
         {
             if (abs(error) < 1)
@@ -50,10 +50,10 @@ void rotateToAngle(double targetAngle)
         speed = std::max(speed, -60.0);
         pros::lcd::set_text(1, std::to_string(speed));
 
-        front_left_mtr.move_velocity(speed);
-        front_right_mtr.move_velocity(speed);
-        back_left_mtr.move_velocity(speed);
-        back_right_mtr.move_velocity(speed);
+        front_left_mtr.move_velocity(-speed);
+        front_right_mtr.move_velocity(-speed);
+        back_left_mtr.move_velocity(-speed);
+        back_right_mtr.move_velocity(-speed);
         if (abs(error) < 0.5)
         {
             finishTimer += 1;
@@ -185,7 +185,7 @@ void driveToPoint(double x, double y, double targetAngle)
     double KiSpeed = 0.00;
     double KdSpeed = 0.0;
 
-    double KpAngle = 0.0;
+    double KpAngle = 1;
     double KiAngle = 0.0;
     double KdAngle = 0.0;
 
@@ -212,12 +212,12 @@ void driveToPoint(double x, double y, double targetAngle)
 
     while (true)
     {
-        xDiff = -x - xPos;
+        xDiff = x - xPos;
         yDiff = y - yPos;
 
         //Distance between the robot and the point
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
-        errorAngle = targetAngle - angle;
+        errorAngle = targetAngle - angle * 180 / M_PI;
 
         if (errorAngle > 180)
         {
@@ -283,7 +283,7 @@ void driveToPoint(double x, double y, double targetAngle)
         speedAngle = std::min(speedAngle, speedLimit);
         speedAngle = std::max(speedAngle, -speedLimit);
 
-        driveAngle = atan2(x - -xPos, y - yPos) + angle + M_PI / 2;
+        driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
 
         xRatio = -cos(driveAngle + (M_PI / 4));
         yRatio = sin(driveAngle + (M_PI / 4));
@@ -293,15 +293,19 @@ void driveToPoint(double x, double y, double targetAngle)
         xPowerPercentage = (xRatio / maxRatio);
         yPowerPercentage = (yRatio / maxRatio);
 
-        front_right_mtr.move_velocity(-xPowerPercentage * speedSpeed);
-        front_left_mtr.move_velocity(yPowerPercentage * speedSpeed);
-        back_right_mtr.move_velocity(-yPowerPercentage * speedSpeed);
-        back_left_mtr.move_velocity(xPowerPercentage * speedSpeed);
+        front_right_mtr.move_velocity(-xPowerPercentage * speedSpeed + speedAngle);
+        front_left_mtr.move_velocity(yPowerPercentage * speedSpeed + speedAngle);
+        back_right_mtr.move_velocity(-yPowerPercentage * speedSpeed + speedAngle);
+        back_left_mtr.move_velocity(xPowerPercentage * speedSpeed + speedAngle);
+
+        // front_right_mtr.move_velocity(30);
+        // front_left_mtr.move_velocity(30);
+        // back_right_mtr.move_velocity(30);
+        // back_left_mtr.move_velocity(30);
 
         pros::lcd::set_text(4, "distErr: " + std::to_string(errorSpeed));
 
-        // if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
-        if (abs(errorSpeed) < 0.5)
+        if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
         {
             finishTimer += 1;
         }

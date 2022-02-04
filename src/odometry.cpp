@@ -43,14 +43,14 @@ void updatePosition(int i)
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (wheelDiameter / 2);
 
     //Calculate change in rotation
-    deltaTheta = -(deltaLeft - deltaRight) / (Sl + Sr);
+    deltaTheta = (deltaLeft - deltaRight) / (Sl + Sr);
 
     //Calculate change in X and Y position
     delta_middle_pos = (deltaLeft + deltaRight) / 2;
     delta_perp_pos = deltaSide - Ss * deltaTheta;
 
-    deltaX = delta_middle_pos * cos(angle) - delta_perp_pos * sin(angle);
-    deltaY = delta_middle_pos * sin(angle) + delta_perp_pos * cos(angle);
+    deltaX = delta_middle_pos * cos(angle) + delta_perp_pos * sin(angle);
+    deltaY = -delta_middle_pos * sin(angle) + delta_perp_pos * cos(angle);
 
     //Acumulate change in X, Y and Rotation
     // xPos += deltaX;
@@ -80,14 +80,15 @@ void odometry(void *odometryArgs)
 
     leftEncoder.set_reversed(false);
     rightEncoder.set_reversed(true);
-    sideEncoder.set_reversed(false);
+    sideEncoder.set_reversed(true);
     int i = 0;
     while (true)
     {
-        // if (i % 10 == 0)
-        // {
-        //     printf("%f %f %f %f %f %f\n", deltaLeft, deltaRight, deltaTheta, curLeft, curRight, angle);
-        // }
+        if (i % 10 == 0)
+        {
+            // printf("%f %f %f %f %f %f\n", deltaLeft, deltaRight, deltaTheta, curLeft, curRight, angle);
+            printf("x: %f, y: %f angle: %f\n", xPos, yPos, angle * 180 / M_PI);
+        }
         updatePosition(i);
         pros::delay(20);
         i++;
