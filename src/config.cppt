@@ -1,0 +1,12 @@
+#include "main.h"
+
+// pros::Controller controller(pros::E_CONTROLLER_MASTER);
+// pros::Motor front_right_mtr(6);
+// pros::Motor front_left_mtr(5);
+// pros::Motor back_right_mtr(16);
+// pros::Motor back_left_mtr(15);
+
+// pros::Rotation leftEncoder(11);
+// pros::Rotation rightEncoder(20);
+// pros::Rotation sideEncoder(7);
+// pros::IMU gyro(13);

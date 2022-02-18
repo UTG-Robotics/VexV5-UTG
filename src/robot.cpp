@@ -50,10 +50,10 @@ void rotateToAngle(double targetAngle)
         speed = std::max(speed, -60.0);
         pros::lcd::set_text(1, std::to_string(speed));
 
-        front_left_mtr.move_velocity(-speed);
-        front_right_mtr.move_velocity(-speed);
-        back_left_mtr.move_velocity(-speed);
-        back_right_mtr.move_velocity(-speed);
+        front_left_mtr.move(-speed);
+        front_right_mtr.move(-speed);
+        back_left_mtr.move(-speed);
+        back_right_mtr.move(-speed);
         if (abs(error) < 0.5)
         {
             finishTimer += 1;
@@ -136,10 +136,10 @@ void driveForward(double inches)
         speed = std::max(speed, -60.0);
         pros::lcd::set_text(1, std::to_string(error));
 
-        front_left_mtr.move_velocity(-speed);
-        front_right_mtr.move_velocity(speed);
-        back_left_mtr.move_velocity(-speed);
-        back_right_mtr.move_velocity(speed);
+        front_left_mtr.move(-speed);
+        front_right_mtr.move(speed);
+        back_left_mtr.move(-speed);
+        back_right_mtr.move(speed);
         if (abs(error) < 0.5)
         {
             finishTimer += 1;
@@ -164,7 +164,7 @@ void driveForward(double inches)
     back_right_mtr.move(0);
 }
 
-void driveToPoint(double x, double y, double targetAngle)
+void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int timeout)
 {
     // x *= -1;
     // y *= -1;
@@ -182,14 +182,14 @@ void driveToPoint(double x, double y, double targetAngle)
     double finishTimer = 0;
 
     double KpSpeed = 15;
-    double KiSpeed = 0.00;
-    double KdSpeed = 0.0;
+    double KiSpeed = 0.3;
+    double KdSpeed = 0.5;
 
     double KpAngle = 1;
-    double KiAngle = 0.0;
-    double KdAngle = 0.0;
+    double KiAngle = 0.1;
+    double KdAngle = 0.1;
 
-    double speedLimit = 60;
+    double speedLimit = maxSpeed;
 
     double driveAngle;
     double maxRatio;
@@ -210,12 +210,13 @@ void driveToPoint(double x, double y, double targetAngle)
 
     int i = 0;
 
+    int startTime = pros::millis();
     while (true)
     {
         xDiff = x - xPos;
         yDiff = y - yPos;
 
-        //Distance between the robot and the point
+        // Distance between the robot and the point
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
         errorAngle = targetAngle - angle * 180 / M_PI;
 
@@ -230,11 +231,11 @@ void driveToPoint(double x, double y, double targetAngle)
 
         if (KiSpeed != 0)
         {
-            if (abs(errorSpeed) < 1)
+            if (abs(errorSpeed) < 0.5)
             {
                 integralSpeed = 0;
             }
-            if (abs(integralSpeed) < 300)
+            if (abs(integralSpeed) < 400)
             {
                 integralSpeed += errorSpeed;
             }
@@ -250,7 +251,7 @@ void driveToPoint(double x, double y, double targetAngle)
 
         if (KiAngle != 0)
         {
-            if (abs(errorAngle) < 1)
+            if (abs(errorAngle) < 0.5)
             {
                 integralAngle = 0;
             }
@@ -293,19 +294,19 @@ void driveToPoint(double x, double y, double targetAngle)
         xPowerPercentage = (xRatio / maxRatio);
         yPowerPercentage = (yRatio / maxRatio);
 
-        front_right_mtr.move_velocity(-xPowerPercentage * speedSpeed + speedAngle);
-        front_left_mtr.move_velocity(yPowerPercentage * speedSpeed + speedAngle);
-        back_right_mtr.move_velocity(-yPowerPercentage * speedSpeed + speedAngle);
-        back_left_mtr.move_velocity(xPowerPercentage * speedSpeed + speedAngle);
+        front_right_mtr.move(-xPowerPercentage * speedSpeed + speedAngle);
+        front_left_mtr.move(yPowerPercentage * speedSpeed + speedAngle);
+        back_right_mtr.move(-yPowerPercentage * speedSpeed + speedAngle);
+        back_left_mtr.move(xPowerPercentage * speedSpeed + speedAngle);
 
-        // front_right_mtr.move_velocity(30);
-        // front_left_mtr.move_velocity(30);
-        // back_right_mtr.move_velocity(30);
-        // back_left_mtr.move_velocity(30);
+        // front_right_mtr.move(30);
+        // front_left_mtr.move(30);
+        // back_right_mtr.move(30);
+        // back_left_mtr.move(30);
 
-        pros::lcd::set_text(4, "distErr: " + std::to_string(errorSpeed));
+        // pros::lcd::set_text(4, "distErr: " + std::to_string(errorSpeed));
 
-        if (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5)
+        if ((abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5) || (pros::millis() - startTime) > timeout)
         {
             finishTimer += 1;
         }
@@ -318,10 +319,10 @@ void driveToPoint(double x, double y, double targetAngle)
             break;
         }
         i++;
-        if (i % 5 == 0)
-        {
-            printf("%f %f %f %f %f %f %f %f %f\n", xPowerPercentage, yPowerPercentage, xDiff, yDiff, errorSpeed, driveAngle, xPos, yPos, angle);
-        }
+        // if (i % 5 == 0)
+        // {
+        //     printf("%f %f %f %f %f %f %f %f %f\n", xPowerPercentage, yPowerPercentage, xDiff, yDiff, errorSpeed, driveAngle, xPos, yPos, angle);
+        // }
 
         pros::delay(15);
     }
@@ -331,4 +332,15 @@ void driveToPoint(double x, double y, double targetAngle)
     front_right_mtr.move(0);
     back_left_mtr.move(0);
     back_right_mtr.move(0);
+}
+
+void move_relative_blocking(pros::Motor &targetMotor, int amount, int rpm, int timeOut)
+{
+    int startTime = pros::millis();
+    int targetPos = targetMotor.get_position() + amount;
+    targetMotor.move_relative(amount, rpm);
+    while (abs(targetPos - targetMotor.get_position()) > 5 && (pros::millis() - startTime) < timeOut)
+    {
+        pros::delay(2);
+    }
 }
