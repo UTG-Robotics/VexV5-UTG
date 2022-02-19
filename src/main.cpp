@@ -62,6 +62,25 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+
+/*
+Our auton, who art in c++,
+	called by thy name;
+  thy operating system run;
+thy program run correctly
+  as it did in testing.
+Give us this day our daily miracle.
+And forgive us our sketchy autonomous,
+	as we forgive Cooper
+  who writes broken code.
+And lead us not into defeat;
+  but deliver us from coding at the tournament.
+	For thine is the awp,
+the odometry, and the tracking,
+  leading us, our robot,
+	to victory.
+	  Return;
+*/
 void autonomous()
 {
 	if (selector::auton == 1)
@@ -111,25 +130,6 @@ void autonomous()
 }
 
 /**
-Our auton, who art in c++,
-	called by thy name;
-  thy operating system run;
-thy program run correctly
-  as it did in testing.
-Give us this day our daily miracle.
-And forgive us our sketchy autonomous,
-	as we forgive Cooper
-  who writes broken code.
-And lead us not into defeat;
-  but deliver us from coding at the tournament.
-	For thine is the awp,
-the odometry, and the tracking,
-  leading us, our robot,
-	to victory.
-	  Return;
-**/
-
-/**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
  * the Field Management System or the VEX Competition Switch in the operator
@@ -166,17 +166,9 @@ void opcontrol()
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-	// Grab Left Yellow Goal
-	/*
-	driveToPoint(-22, 50, 5, 80);
-	move_relative_blocking(claw_mtr, 2400, 100, 3000);
-	arm_mtr_left.move_relative(2400, 200);
-	move_relative_blocking(arm_mtr_right, 2400, 200, 3000);
-	driveToPoint(0, 0, 0, 80);
-	*/
 	while (true)
 	{
-		// Get Joystick Values
+		// Get Joystick Values and apply cubic scaling
 		float joystickCh1 = pow((float)controller.get_analog(ANALOG_RIGHT_X) / 127, 3) * 127;
 		float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
 		float joystickCh4 = pow((float)controller.get_analog(ANALOG_LEFT_X) / 127, 3) * 127;
@@ -228,13 +220,12 @@ void opcontrol()
 			back_claw_mtr.move(-10);
 		}
 
-		// printf("%f\n", claw_mtr.get_power());
 		// Motor speed control
 		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
 		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
-		pros::delay(100);
+		pros::delay(20);
 	}
 }
