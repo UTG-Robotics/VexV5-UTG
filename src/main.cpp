@@ -13,7 +13,7 @@ pros::Motor back_right_mtr(16);
 pros::Motor back_left_mtr(15);
 pros::Motor arm_mtr_left(1);
 pros::Motor arm_mtr_right(10);
-pros::Motor claw_mtr(4);
+pros::Motor claw_mtr(8);
 pros::Motor back_claw_mtr(9);
 
 /**

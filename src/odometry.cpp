@@ -41,10 +41,10 @@ void updatePosition(int i)
 
     //Calculate the change in encoder values in inches
     deltaLeft = (curLeft - lastLeftPos) * (M_PI / 180) * (wheelDiameter / 2);
-    deltaRight = (curRight - lastRightPos) * (M_PI / 180) * (wheelDiameter / 2); // step 2
+    deltaRight = (curRight - lastRightPos) * (M_PI / 180) * (wheelDiameter / 2);
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (wheelDiameter / 2);
 
-    // Calculate change in rotation
+    // Calculate change in rotation by averaging encoders and gyro
     deltaTheta = ((curGyro - oldGyro) + (deltaLeft - deltaRight) / (Sl + Sr)) / 2;
 
     // Calculate change in forward and sideways position
