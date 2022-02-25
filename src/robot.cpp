@@ -2,11 +2,6 @@
 
 void rotateToAngle(double targetAngle)
 {
-    pros::Motor front_right_mtr(6);
-    pros::Motor front_left_mtr(5);
-    pros::Motor back_right_mtr(16);
-    pros::Motor back_left_mtr(15);
-
     double error = targetAngle - angle * 180 / M_PI;
     double lastError = error;
     double speed = 0;
@@ -79,15 +74,6 @@ void rotateToAngle(double targetAngle)
 
 void driveForward(double inches)
 {
-    pros::Rotation leftEncoder(11);
-    pros::Rotation rightEncoder(20);
-    pros::Rotation sideEncoder(7);
-
-    pros::Motor front_right_mtr(6);
-    pros::Motor front_left_mtr(5);
-    pros::Motor back_right_mtr(16);
-    pros::Motor back_left_mtr(15);
-
     const double ENCODERTOINCHES = 0.00024;
 
     double start = yPos;
@@ -166,12 +152,6 @@ void driveForward(double inches)
 
 void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int timeout)
 {
-
-    pros::Motor front_right_mtr(6);
-    pros::Motor front_left_mtr(5);
-    pros::Motor back_right_mtr(16);
-    pros::Motor back_left_mtr(15);
-
     double errorSpeed;
     double errorAngle;
     double lastErrorSpeed;
@@ -180,7 +160,7 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
     double speedAngle = 0;
     double finishTimer = 0;
 
-    //Initialize PID constants
+    // Initialize PID constants
     double KpSpeed = 15;
     double KiSpeed = 0.3;
     double KdSpeed = 0.5;
@@ -285,25 +265,25 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         speedAngle = std::min(speedAngle, speedLimit);
         speedAngle = std::max(speedAngle, -speedLimit);
 
-        //Calculate angle needed to drive at to go to the point
+        // Calculate angle needed to drive at to go to the point
         driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
 
-        //Calculate how much to move each set of opposite wheels to move at that angle
+        // Calculate how much to move each set of opposite wheels to move at that angle
         xRatio = -cos(driveAngle + (M_PI / 4));
         yRatio = sin(driveAngle + (M_PI / 4));
 
-        //Normalize values to maximum of 1
+        // Normalize values to maximum of 1
         maxRatio = std::max(abs(xRatio), abs(yRatio));
         xPowerPercentage = (xRatio / maxRatio);
         yPowerPercentage = (yRatio / maxRatio);
 
-        //Move at angle while rotating
+        // Move at angle while rotating
         front_right_mtr.move(-xPowerPercentage * speedSpeed + speedAngle);
         front_left_mtr.move(yPowerPercentage * speedSpeed + speedAngle);
         back_right_mtr.move(-yPowerPercentage * speedSpeed + speedAngle);
         back_left_mtr.move(xPowerPercentage * speedSpeed + speedAngle);
 
-        //If the error is within an acceptable margin or timeout is over, start timer
+        // If the error is within an acceptable margin or timeout is over, start timer
         if ((abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5) || (pros::millis() - startTime) > timeout)
         {
             finishTimer += 1;
@@ -320,7 +300,7 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
 
         pros::delay(15);
     }
-    //Stop robot
+    // Stop robot
     front_left_mtr.move(0);
     front_right_mtr.move(0);
     back_left_mtr.move(0);

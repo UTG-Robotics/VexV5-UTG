@@ -44,14 +44,26 @@
 #include <math.h>
 #include "odometry.hpp"
 #include "robot.hpp"
-#include "config.hpp"
 #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
 extern double xPos;
 extern double yPos;
 extern double angle;
+
 extern pros::IMU gyro;
+extern pros::Rotation leftEncoder;
+extern pros::Rotation rightEncoder;
+extern pros::Rotation sideEncoder;
+
+extern pros::Motor front_right_mtr;
+extern pros::Motor front_left_mtr;
+extern pros::Motor back_right_mtr;
+extern pros::Motor back_left_mtr;
+extern pros::Motor arm_mtr_left;
+extern pros::Motor arm_mtr_right;
+extern pros::Motor claw_mtr;
+extern pros::Motor back_claw_mtr;
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do

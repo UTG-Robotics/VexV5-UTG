@@ -1,12 +1,16 @@
 #include "main.h"
 #include "autoSelect/selection.h"
+#include <fstream>
 
 double xPos = 0;
 double yPos = 0;
 double angle = 0;
 
 pros::IMU gyro(3);
-pros::Controller controller(pros::E_CONTROLLER_MASTER);
+pros::Rotation leftEncoder(11);
+pros::Rotation rightEncoder(20);
+pros::Rotation sideEncoder(7);
+
 pros::Motor front_right_mtr(6);
 pros::Motor front_left_mtr(5);
 pros::Motor back_right_mtr(16);
@@ -144,23 +148,24 @@ void autonomous()
  */
 void opcontrol()
 {
-	pros::Rotation leftEncoder(11);
-	pros::Rotation rightEncoder(20);
-	pros::Rotation sideEncoder(7);
+	pros::Controller controller(pros::E_CONTROLLER_MASTER);
+	bool savingData = true;
+	std::ofstream myfile;
+	myfile.open("/usd/PosData.txt");
+	myfile.close();
 
-	for (int i = 0; i < 2; i++)
-	{
-		leftEncoder.reset();
-		rightEncoder.reset();
-		sideEncoder.reset();
-		leftEncoder.reset_position();
-		rightEncoder.reset_position();
-		sideEncoder.reset_position();
-		xPos = 0;
-		yPos = 0;
-		angle = 0;
-		pros::delay(100);
-	}
+	leftEncoder.reset();
+	rightEncoder.reset();
+	sideEncoder.reset();
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	sideEncoder.reset_position();
+
+	xPos = 0;
+	yPos = 0;
+	angle = 0;
+	pros::delay(100);
+
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -220,11 +225,25 @@ void opcontrol()
 			back_claw_mtr.move(-10);
 		}
 
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+		{
+			myfile.close();
+			savingData = false;
+			printf("Closed");
+		}
 		// Motor speed control
 		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
 		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+
+		if (savingData && (xPos || yPos || angle))
+		{
+			myfile.open("/usd/PosData.txt", std::ios_base::app);
+
+			myfile << xPos << " " << yPos << " " << angle << std::endl;
+			myfile.close();
+		}
 
 		pros::delay(20);
 	}
