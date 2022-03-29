@@ -65,6 +65,9 @@ extern pros::Motor arm_mtr_right;
 extern pros::Motor claw_mtr;
 extern pros::Motor back_claw_mtr;
 
+void savePos();
+void replayPos();
+
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
  * Motor, you can use the namespace with the following commented out line.

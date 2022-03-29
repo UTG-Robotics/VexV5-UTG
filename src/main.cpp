@@ -2,10 +2,22 @@
 #include "autoSelect/selection.h"
 #include <fstream>
 
+/* Build with
+pros make -- FLAGS=-DREPLAY
+to replay, will record otherwise
+*/
+
+// Change this comment to reupload
+
+#ifndef REPLAY
+#define RECORD
+#endif
+
 double xPos = 0;
 double yPos = 0;
 double angle = 0;
 
+bool startReplay = false;
 pros::IMU gyro(3);
 pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(20);
@@ -30,13 +42,58 @@ pros::Motor back_claw_mtr(9);
 void initialize()
 {
 	pros::Task odometry_task(odometry);
+
+#ifdef RECORD
+	pros::Task replay_task(savePos);
+#endif
+
+#ifdef REPLAY
+	pros::Task replay_task(replayPos);
+#endif
+
 	selector::init();
-	// pros::lcd::initialize();
 	arm_mtr_left.set_reversed(true);
 	claw_mtr.set_reversed(true);
 	back_claw_mtr.set_reversed(true);
-	// back_claw_mtr.move(50);
-	// pros::delay(3000);
+}
+
+void savePos()
+{
+	std::ofstream myfile;
+	myfile.open("/usd/PosData.txt");
+	myfile.close();
+	controller_print(CONTROLLER_MASTER, 0, 6, "Recording");
+	while (true)
+	{
+		if ((abs(xPos) > 0.1 || yPos > 0.1 || angle * 180 / M_PI > 0.5))
+		{
+
+			myfile.open("/usd/PosData.txt", std::ios_base::app);
+
+			myfile << xPos << " " << yPos << " " << angle * 180 / M_PI << std::endl;
+			myfile.close();
+		}
+		pros::delay(20);
+	}
+}
+void replayPos()
+{
+	printf(pros::usd::is_installed() ? "true" : "false");
+	printf("Opening File\n\n");
+	std::ifstream infile("/usd/PosData.txt");
+	printf("File Opened\n\n");
+	pros::delay(2000);
+	printf("Replay Starting\n\n");
+	double tempX, tempY, tempAngle;
+	startReplay = true;
+	while (infile >> tempX >> tempY >> tempAngle)
+	{
+		targetX = tempX;
+		targetY = tempY;
+		targetAngleGlobal = tempAngle;
+		printf("%f\n", tempX);
+		pros::delay(20);
+	}
 }
 
 /**
@@ -149,10 +206,6 @@ void autonomous()
 void opcontrol()
 {
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
-	bool savingData = true;
-	std::ofstream myfile;
-	myfile.open("/usd/PosData.txt");
-	myfile.close();
 
 	leftEncoder.reset();
 	rightEncoder.reset();
@@ -164,7 +217,7 @@ void opcontrol()
 	xPos = 0;
 	yPos = 0;
 	angle = 0;
-	pros::delay(100);
+	pros::delay(2000);
 
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -173,6 +226,11 @@ void opcontrol()
 
 	while (true)
 	{
+		if (startReplay)
+		{
+			driveToPoint(0, 0, 0, 127);
+			startReplay = false;
+		}
 		// Get Joystick Values and apply cubic scaling
 		float joystickCh1 = pow((float)controller.get_analog(ANALOG_RIGHT_X) / 127, 3) * 127;
 		float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
@@ -203,10 +261,10 @@ void opcontrol()
 		{
 			claw_mtr.move(-127);
 		}
-		else if (abs(claw_mtr.get_power()) > 4)
-		{
-			claw_mtr.move(0);
-		}
+		// else if (abs(claw_mtr.get_power()) > 4)
+		// {
+		// 	claw_mtr.move(0);
+		// }
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
 		{
 			claw_mtr.move(0);
@@ -224,26 +282,11 @@ void opcontrol()
 		{
 			back_claw_mtr.move(-10);
 		}
-
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
-		{
-			myfile.close();
-			savingData = false;
-			printf("Closed");
-		}
 		// Motor speed control
 		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
 		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
 		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
 		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
-
-		if (savingData && (xPos || yPos || angle))
-		{
-			myfile.open("/usd/PosData.txt", std::ios_base::app);
-
-			myfile << xPos << " " << yPos << " " << angle << std::endl;
-			myfile.close();
-		}
 
 		pros::delay(20);
 	}

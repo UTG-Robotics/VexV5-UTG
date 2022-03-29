@@ -5,7 +5,7 @@ float Ss = 5.4;             // distance from tracking center to middle of the tr
 float wheelDiameter = 2.75; // diameter of the wheels being used for tracking
 
 float lastLeftPos = 0;
-float lastRightPos = 0;
+float lastRightPos = 0; 
 float lastSidePos = 0;
 float oldGyro = 0;
 
@@ -106,12 +106,13 @@ void odometry(void *odometryArgs)
     rightEncoder.set_reversed(true);
     sideEncoder.set_reversed(true);
     int i = 0;
-    pros::delay(5000);
+    pros::delay(200);
     while (true)
     {
         // wait for gyro initialization
-        if (gyro.get_rotation() != gyro.get_rotation())
+        if (gyro.get_rotation() != gyro.get_rotation() || std::isinf(gyro.get_rotation()))
         {
+            // printf("Gyro not initialized\n");
             continue;
         }
         updatePosition(i);

@@ -1,4 +1,7 @@
 #include "main.h"
+double targetX = 0;
+double targetY = 0;
+double targetAngleGlobal = 0;
 
 void rotateToAngle(double targetAngle)
 {
@@ -152,6 +155,13 @@ void driveForward(double inches)
 
 void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int timeout)
 {
+    bool movingTarget = false;
+    double oldTargetX = 0;
+    double oldTargetY = 0;
+    double oldTargetAngleGlobal = 0;
+    targetX = x;
+    targetY = y;
+    targetAngleGlobal = targetAngle;
     double errorSpeed;
     double errorAngle;
     double lastErrorSpeed;
@@ -161,13 +171,14 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
     double finishTimer = 0;
 
     // Initialize PID constants
-    double KpSpeed = 15;
-    double KiSpeed = 0.3;
-    double KdSpeed = 0.5;
 
-    double KpAngle = 1;
-    double KiAngle = 0.1;
-    double KdAngle = 0.1;
+    double KpSpeed = 0.09;
+    double KiSpeed = 0.001;
+    double KdSpeed = 0.3;
+
+    double KpAngle = 0.01;
+    double KiAngle = 0;
+    double KdAngle = 0;
 
     double speedLimit = maxSpeed;
 
@@ -194,12 +205,22 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
 
     while (true)
     {
-        xDiff = x - xPos;
-        yDiff = y - yPos;
-
+        if (targetX != oldTargetX || targetY != oldTargetY || targetAngleGlobal != oldTargetAngleGlobal)
+        {
+            movingTarget = true;
+        }
+        else
+        {
+            movingTarget = false;
+        }
+        xDiff = targetX - xPos;
+        yDiff = targetY - yPos;
+        oldTargetX = targetX;
+        oldTargetY = targetY;
+        oldTargetAngleGlobal = targetAngleGlobal;
         // Claculate distance between the robot and the point
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
-        errorAngle = targetAngle - angle * 180 / M_PI;
+        errorAngle = targetAngleGlobal - angle * 180 / M_PI;
 
         if (errorAngle > 180)
         {
@@ -212,17 +233,17 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
 
         if (KiSpeed != 0)
         {
-            if (abs(errorSpeed) < 0.5)
+            if (abs(errorSpeed) > 1)
             {
                 integralSpeed = 0;
             }
-            if (abs(integralSpeed) < 400)
-            {
-                integralSpeed += errorSpeed;
-            }
+            // else if (abs(integralSpeed) < 400)
+            // {
+            //     integralSpeed += errorSpeed;
+            // }
             else
             {
-                integralSpeed = 0;
+                integralSpeed += errorSpeed;
             }
         }
         else
@@ -259,14 +280,14 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         speedSpeed = KpSpeed * errorSpeed + KiSpeed * integralSpeed + KdSpeed * derivativeSpeed;
         speedAngle = KpAngle * errorAngle + KiAngle * integralAngle + KdAngle * derivativeAngle;
 
-        speedSpeed = std::min(speedSpeed, speedLimit);
-        speedSpeed = std::max(speedSpeed, -speedLimit);
+        speedSpeed = std::min(speedSpeed * 127, speedLimit) / 127;
+        speedSpeed = std::max(speedSpeed * 127, -speedLimit) / 127;
 
-        speedAngle = std::min(speedAngle, speedLimit);
-        speedAngle = std::max(speedAngle, -speedLimit);
+        speedAngle = std::min(speedAngle * 127, speedLimit) / 127;
+        speedAngle = std::max(speedAngle * 127, -speedLimit) / 127;
 
         // Calculate angle needed to drive at to go to the point
-        driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
+        driveAngle = atan2(targetX - xPos, targetY - yPos) + angle + M_PI / 2;
 
         // Calculate how much to move each set of opposite wheels to move at that angle
         xRatio = -cos(driveAngle + (M_PI / 4));
@@ -278,13 +299,13 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         yPowerPercentage = (yRatio / maxRatio);
 
         // Move at angle while rotating
-        front_right_mtr.move(-xPowerPercentage * speedSpeed + speedAngle);
-        front_left_mtr.move(yPowerPercentage * speedSpeed + speedAngle);
-        back_right_mtr.move(-yPowerPercentage * speedSpeed + speedAngle);
-        back_left_mtr.move(xPowerPercentage * speedSpeed + speedAngle);
+        front_right_mtr.move(-xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
+        front_left_mtr.move(yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
+        back_right_mtr.move(-yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
+        back_left_mtr.move(xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
 
         // If the error is within an acceptable margin or timeout is over, start timer
-        if ((abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5) || (pros::millis() - startTime) > timeout)
+        if (((abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5) || (pros::millis() - startTime) > timeout) && !movingTarget)
         {
             finishTimer += 1;
         }
@@ -297,9 +318,18 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
             break;
         }
         i++;
-
+        printf("%f\n", targetX);
+        if (yDiff < 0)
+        {
+            // printf("%f %f %f\n", -errorSpeed, speedSpeed * 127, angle * 180 / M_PI);
+        }
+        else
+        {
+            // printf("%f %f %f\n", errorSpeed, speedSpeed * 127, angle * 180 / M_PI);
+        }
         pros::delay(15);
     }
+
     // Stop robot
     front_left_mtr.move(0);
     front_right_mtr.move(0);
