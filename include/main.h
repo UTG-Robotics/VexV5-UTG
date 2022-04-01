@@ -51,6 +51,7 @@ extern double xPos;
 extern double yPos;
 extern double angle;
 
+extern pros::Controller controller;
 extern pros::IMU gyro;
 extern pros::Rotation leftEncoder;
 extern pros::Rotation rightEncoder;

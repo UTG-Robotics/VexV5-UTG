@@ -1,11 +1,11 @@
 #include "main.h"
-
-float Sl = 6.49, Sr = Sl;   // distance from tracking center to middle of left and right wheel
+// old = 6.49
+float Sl = 6.455, Sr = Sl;  // distance from tracking center to middle of left and right wheel
 float Ss = 5.4;             // distance from tracking center to middle of the tracking wheel
 float wheelDiameter = 2.75; // diameter of the wheels being used for tracking
 
 float lastLeftPos = 0;
-float lastRightPos = 0; 
+float lastRightPos = 0;
 float lastSidePos = 0;
 float oldGyro = 0;
 
@@ -46,6 +46,7 @@ void updatePosition(int i)
 
     // Calculate change in rotation by averaging encoders and gyro
     deltaTheta = ((curGyro - oldGyro) + (deltaLeft - deltaRight) / (Sl + Sr)) / 2;
+    // deltaTheta = (deltaLeft - deltaRight) / (Sl + Sr);
 
     // Calculate change in forward and sideways position
     delta_forward_pos = (deltaLeft + deltaRight) / 2;

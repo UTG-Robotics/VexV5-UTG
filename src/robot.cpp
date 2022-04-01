@@ -65,6 +65,8 @@ void rotateToAngle(double targetAngle)
         {
             break;
         }
+
+        printf("%f\n", error);
         pros::delay(15);
     }
     pros::lcd::set_text(1, "Finished");
@@ -222,14 +224,14 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
         errorAngle = targetAngleGlobal - angle * 180 / M_PI;
 
-        if (errorAngle > 180)
-        {
-            errorAngle -= 360;
-        }
-        else if (errorAngle < -180)
-        {
-            errorAngle += 360;
-        }
+        // if (errorAngle > 180)
+        // {
+        //     errorAngle -= 360;
+        // }
+        // else if (errorAngle < -180)
+        // {
+        //     errorAngle += 360;
+        // }
 
         if (KiSpeed != 0)
         {

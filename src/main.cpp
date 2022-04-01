@@ -5,9 +5,12 @@
 /* Build with
 pros make -- FLAGS=-DREPLAY
 to replay, will record otherwise
+
 */
 
 // Change this comment to reupload
+
+// #define REPLAY
 
 #ifndef REPLAY
 #define RECORD
@@ -18,6 +21,8 @@ double yPos = 0;
 double angle = 0;
 
 bool startReplay = false;
+
+pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::IMU gyro(3);
 pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(20);
@@ -62,18 +67,22 @@ void savePos()
 	std::ofstream myfile;
 	myfile.open("/usd/PosData.txt");
 	myfile.close();
-	controller_print(CONTROLLER_MASTER, 0, 6, "Recording");
+	std::uint32_t now = pros::millis();
+	int curTime = pros::millis();
+	int lastTime = pros::millis();
+	// pros::controller_print(CONTROLLER_MASTER, 0, 6, "Recording");
 	while (true)
 	{
 		if ((abs(xPos) > 0.1 || yPos > 0.1 || angle * 180 / M_PI > 0.5))
 		{
-
+			lastTime = curTime;
 			myfile.open("/usd/PosData.txt", std::ios_base::app);
-
-			myfile << xPos << " " << yPos << " " << angle * 180 / M_PI << std::endl;
+			curTime = pros::micros();
+			myfile
+				<< xPos << " " << yPos << " " << angle * 180 / M_PI << " " << curTime - lastTime << std::endl;
 			myfile.close();
 		}
-		pros::delay(20);
+		pros::Task::delay_until(&now, 20);
 	}
 }
 void replayPos()
@@ -83,16 +92,19 @@ void replayPos()
 	std::ifstream infile("/usd/PosData.txt");
 	printf("File Opened\n\n");
 	pros::delay(2000);
+	controller.set_text(0, 0, "Starting Replay");
 	printf("Replay Starting\n\n");
-	double tempX, tempY, tempAngle;
+	double tempX, tempY, tempAngle, tempTime;
 	startReplay = true;
-	while (infile >> tempX >> tempY >> tempAngle)
+	std::uint32_t now = pros::millis();
+	while (infile >> tempX >> tempY >> tempAngle >> tempTime)
 	{
 		targetX = tempX;
 		targetY = tempY;
 		targetAngleGlobal = tempAngle;
-		printf("%f\n", tempX);
+		printf("%f\n", tempTime);
 		pros::delay(20);
+		// pros::Task::delay_until(&now, tempTime / 1000.0);
 	}
 }
 
@@ -205,8 +217,6 @@ void autonomous()
  */
 void opcontrol()
 {
-	pros::Controller controller(pros::E_CONTROLLER_MASTER);
-
 	leftEncoder.reset();
 	rightEncoder.reset();
 	sideEncoder.reset();
@@ -224,6 +234,8 @@ void opcontrol()
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
+	// rotateToAngle(360 * 5);
+	// driveToPoint(0, 0, 360 * 5, 127);
 	while (true)
 	{
 		if (startReplay)
