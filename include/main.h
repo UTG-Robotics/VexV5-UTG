@@ -44,7 +44,7 @@
 #include <math.h>
 #include "odometry.hpp"
 #include "robot.hpp"
-#include "pid.cpp"
+#include "pid.hpp"
 #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 

@@ -1,5 +1,5 @@
 #include "main.h"
-// old = 6.49
+// old = 6.55
 float Sl = 6.455, Sr = Sl;  // distance from tracking center to middle of left and right wheel
 float Ss = 5.4;             // distance from tracking center to middle of the tracking wheel
 float wheelDiameter = 2.75; // diameter of the wheels being used for tracking
@@ -84,7 +84,6 @@ void updatePosition(int i)
     lastRightPos = curRight;
     lastSidePos = curSide;
     oldGyro = curGyro;
-
     // Debug Info
     /*
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));
@@ -117,7 +116,7 @@ void odometry(void *odometryArgs)
             continue;
         }
         updatePosition(i);
-        pros::delay(20);
+        pros::delay(10);
         i++;
     }
 }

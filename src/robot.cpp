@@ -22,7 +22,7 @@ void rotateToAngle(double targetAngle)
         error = angle * 180 / M_PI - targetAngle;
         if (Ki != 0)
         {
-            if (abs(error) < 1)
+            if (abs(error) < 0.3)
             {
                 integral = 0;
             }
@@ -44,15 +44,15 @@ void rotateToAngle(double targetAngle)
         lastError = error;
 
         speed = Kp * error + Ki * integral + Kd * derivative;
-        speed = std::min(speed, 60.0);
-        speed = std::max(speed, -60.0);
+        speed = std::min(speed, 127.0);
+        speed = std::max(speed, -127.0);
         pros::lcd::set_text(1, std::to_string(speed));
 
         front_left_mtr.move(-speed);
         front_right_mtr.move(-speed);
         back_left_mtr.move(-speed);
         back_right_mtr.move(-speed);
-        if (abs(error) < 0.5)
+        if (abs(error) < 0.3)
         {
             finishTimer += 1;
         }
@@ -221,6 +221,8 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         speedSpeed = std::clamp(speedSpeed * 127, speedLimit, -speedLimit) / 127;
         speedAngle = std::clamp(speedAngle * 127, speedLimit, -speedLimit) / 127;
 
+        
+
         // Calculate angle needed to drive at to go to the point
         driveAngle = atan2(targetX - xPos, targetY - yPos) + angle + M_PI / 2;
 
@@ -254,7 +256,7 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         {
             break;
         }
-        pros::delay(15);
+        pros::delay(10);
     }
 
     // Stop robot

@@ -217,6 +217,12 @@ void autonomous()
  */
 void opcontrol()
 {
+	bool fieldCentric = true;
+	double moveSpeed = 0;
+	double rotSpeed = 0;
+
+	PID slewPID = PID(3, 0, 0);
+
 	leftEncoder.reset();
 	rightEncoder.reset();
 	sideEncoder.reset();
@@ -227,6 +233,7 @@ void opcontrol()
 	xPos = 0;
 	yPos = 0;
 	angle = 0;
+
 	pros::delay(2000);
 
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -244,9 +251,13 @@ void opcontrol()
 			startReplay = false;
 		}
 		// Get Joystick Values and apply cubic scaling
-		float joystickCh1 = pow((float)controller.get_analog(ANALOG_RIGHT_X) / 127, 3) * 127;
-		float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
-		float joystickCh4 = pow((float)controller.get_analog(ANALOG_LEFT_X) / 127, 3) * 127;
+		// float joystickCh1 = pow((float)controller.get_analog(ANALOG_RIGHT_X) / 127, 3) * 127;
+		// float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
+		// float joystickCh4 = pow((float)controller.get_analog(ANALOG_LEFT_X) / 127, 3) * 127;
+
+		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
+		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
+		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
 
 		// Control arm
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -295,11 +306,48 @@ void opcontrol()
 			back_claw_mtr.move(-10);
 		}
 		// Motor speed control
-		front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
-		front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
-		back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
-		back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
 
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+		{
+			angle = 0;
+		}
+
+		if (!fieldCentric)
+		{
+			front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
+			front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
+			back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
+			back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+		}
+		else
+		{
+			// driveToPoint(0, 0, 3600, 127);
+			double targetAngle = (atan2(-joystickCh4, joystickCh3) + M_PI / 2 + angle);
+
+			double xRatio = -cos(targetAngle + (M_PI / 4));
+			double yRatio = sin(targetAngle + (M_PI / 4));
+
+			// Normalize values to maximum of 1
+			double maxRatio = std::max(abs(xRatio), abs(yRatio));
+			double xPowerPercentage = (xRatio / maxRatio);
+			double yPowerPercentage = (yRatio / maxRatio);
+
+			double joystickMag = hypot(joystickCh4, joystickCh3);
+
+			moveSpeed += (((joystickMag - moveSpeed) > 0) - ((joystickMag - moveSpeed) < 0)) * 20;
+			rotSpeed += (((joystickCh1 - rotSpeed) > 0) - ((joystickCh1 - rotSpeed) < 0)) * 20;
+			if (moveSpeed > joystickMag)
+			{
+				moveSpeed = joystickMag;
+			}
+
+			// Move at angle while rotating
+			printf("moveSpeed: %f\n", moveSpeed);
+			front_right_mtr.move(-xPowerPercentage * moveSpeed + rotSpeed);
+			front_left_mtr.move(yPowerPercentage * moveSpeed + rotSpeed);
+			back_right_mtr.move(-yPowerPercentage * moveSpeed + rotSpeed);
+			back_left_mtr.move(xPowerPercentage * moveSpeed + rotSpeed);
+		}
 		pros::delay(20);
 	}
 }

@@ -1,23 +1,11 @@
-class PID
-{
-private:
-    double Ki = 0;
-    double Kp = 0;
-    double Kd = 0;
-    double lastError = 0;
-    double derivative = 0;
-    double integral = 0;
+#include "main.h"
 
-public:
-    double error;
-    PID(double _Ki, double _Kp, double _Kd)
-    {
-        this->Ki = _Ki;
-        this->Kp = _Kp;
-        this->Kd = _Kd;
-    }
-    double calculate(double _error);
-};
+PID::PID(double _Ki, double _Kp, double _Kd)
+{
+    this->Ki = _Ki;
+    this->Kp = _Kp;
+    this->Kd = _Kd;
+}
 
 double PID::calculate(double _error)
 {
