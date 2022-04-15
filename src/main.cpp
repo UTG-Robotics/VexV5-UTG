@@ -217,7 +217,7 @@ void autonomous()
  */
 void opcontrol()
 {
-	bool fieldCentric = true;
+	bool fieldCentric = false;
 	double moveSpeed = 0;
 	double rotSpeed = 0;
 
@@ -255,9 +255,11 @@ void opcontrol()
 		// float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
 		// float joystickCh4 = pow((float)controller.get_analog(ANALOG_LEFT_X) / 127, 3) * 127;
 
-		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X);
-		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y);
-		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X);
+		float joystickCh1 = slew(controller.get_analog(ANALOG_RIGHT_X), joystickCh1, 10);
+		float joystickCh3 = slew(controller.get_analog(ANALOG_LEFT_Y), joystickCh3, 10);
+		float joystickCh4 = slew(controller.get_analog(ANALOG_LEFT_X), joystickCh4, 10);
+		// print all joystick values
+		// printf("%f, %f, %f\n", joystickCh1, joystickCh3, joystickCh4);
 
 		// Control arm
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -295,29 +297,36 @@ void opcontrol()
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
 		{
-			back_claw_mtr.move(50);
+			back_claw_mtr.move(127);
 		}
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
 		{
-			back_claw_mtr.move(-50);
+			back_claw_mtr.move(-127);
 		}
-		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
 		{
 			back_claw_mtr.move(-10);
 		}
 		// Motor speed control
 
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
 		{
 			angle = 0;
 		}
 
 		if (!fieldCentric)
 		{
-			front_right_mtr.move(-joystickCh3 + joystickCh1 + joystickCh4);
-			front_left_mtr.move(joystickCh3 + joystickCh1 + joystickCh4);
-			back_right_mtr.move(-joystickCh3 + joystickCh1 - joystickCh4);
-			back_left_mtr.move(joystickCh3 + joystickCh1 - joystickCh4);
+			front_right_mtr.move_velocity(-joystickCh3 + joystickCh1 + joystickCh4);
+			front_left_mtr.move_velocity(joystickCh3 + joystickCh1 + joystickCh4);
+			back_right_mtr.move_velocity(-joystickCh3 + joystickCh1 - joystickCh4);
+			back_left_mtr.move_velocity(joystickCh3 + joystickCh1 - joystickCh4);
+
+			// front_right_mtr.move_velocity(-joystickCh3 + joystickCh4);
+			// front_left_mtr.move_velocity(joystickCh3 + joystickCh4);
+			// back_right_mtr.move_velocity(-joystickCh3 - joystickCh4);
+			// back_left_mtr.move_velocity(joystickCh3 - joystickCh4);
+
+			// printf("3: %f 4: %f\n", joystickCh3, joystickCh4);
 		}
 		else
 		{

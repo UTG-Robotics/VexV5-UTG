@@ -221,8 +221,6 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         speedSpeed = std::clamp(speedSpeed * 127, speedLimit, -speedLimit) / 127;
         speedAngle = std::clamp(speedAngle * 127, speedLimit, -speedLimit) / 127;
 
-        
-
         // Calculate angle needed to drive at to go to the point
         driveAngle = atan2(targetX - xPos, targetY - yPos) + angle + M_PI / 2;
 
@@ -291,4 +289,28 @@ double clampf(double value, double min, double max)
     {
         return value;
     }
+}
+
+double slew(double target, double current, double slewRate)
+{
+    printf("pre: target: %f current: %f slewRate: %f\n", target, current, slewRate);
+    double difference = target - current;
+    int sign = 0;
+
+    if (difference > 0)
+    {
+        sign = 1;
+    }
+    else if (difference < 0)
+    {
+        sign = -1;
+    }
+    printf("first: sign: %i target: %f current: %f slewRate: %f\n", sign, target, current, slewRate);
+    current += slewRate * sign;
+    // if (current > )
+    // {
+    //     current = target;
+    // }
+    printf("second: sign: %i target: %f current: %f slewRate: %f\n", sign, target, current, slewRate);
+    return current;
 }
