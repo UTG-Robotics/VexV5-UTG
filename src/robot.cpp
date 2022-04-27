@@ -293,7 +293,6 @@ double clampf(double value, double min, double max)
 
 double slew(double target, double current, double slewRate)
 {
-    printf("pre: target: %f current: %f slewRate: %f\n", target, current, slewRate);
     double difference = target - current;
     int sign = 0;
 
@@ -305,12 +304,14 @@ double slew(double target, double current, double slewRate)
     {
         sign = -1;
     }
-    printf("first: sign: %i target: %f current: %f slewRate: %f\n", sign, target, current, slewRate);
     current += slewRate * sign;
-    // if (current > )
-    // {
-    //     current = target;
-    // }
-    printf("second: sign: %i target: %f current: %f slewRate: %f\n", sign, target, current, slewRate);
+    if (current > 0 && current > target)
+    {
+        current = target;
+    }
+    else if (current < 0 && current < target)
+    {
+        current = target;
+    }
     return current;
 }

@@ -28,6 +28,8 @@ pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(20);
 pros::Rotation sideEncoder(7);
 
+pros::ADIPotentiometer potentiometer(1, pros::E_ADI_POT_EDR);
+
 pros::Motor front_right_mtr(6);
 pros::Motor front_left_mtr(5);
 pros::Motor back_right_mtr(16);
@@ -217,11 +219,10 @@ void autonomous()
  */
 void opcontrol()
 {
+
 	bool fieldCentric = false;
 	double moveSpeed = 0;
 	double rotSpeed = 0;
-
-	PID slewPID = PID(3, 0, 0);
 
 	leftEncoder.reset();
 	rightEncoder.reset();
@@ -245,6 +246,7 @@ void opcontrol()
 	// driveToPoint(0, 0, 360 * 5, 127);
 	while (true)
 	{
+		printf("%f\n", potentiometer.get_angle());
 		if (startReplay)
 		{
 			driveToPoint(0, 0, 0, 127);
@@ -255,9 +257,14 @@ void opcontrol()
 		// float joystickCh3 = pow((float)controller.get_analog(ANALOG_LEFT_Y) / 127, 3) * 127;
 		// float joystickCh4 = pow((float)controller.get_analog(ANALOG_LEFT_X) / 127, 3) * 127;
 
-		float joystickCh1 = slew(controller.get_analog(ANALOG_RIGHT_X), joystickCh1, 10);
-		float joystickCh3 = slew(controller.get_analog(ANALOG_LEFT_Y), joystickCh3, 10);
-		float joystickCh4 = slew(controller.get_analog(ANALOG_LEFT_X), joystickCh4, 10);
+		// float joystickCh1 = slew(controller.get_analog(ANALOG_RIGHT_X), joystickCh1, 10) / 127 * 200;
+		// float joystickCh3 = slew(controller.get_analog(ANALOG_LEFT_Y), joystickCh3, 10) / 127 * 200;
+		// float joystickCh4 = slew(controller.get_analog(ANALOG_LEFT_X), joystickCh4, 10) / 127 * 200;
+
+		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
+		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
+		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X) / 127.0 * 200.0;
+
 		// print all joystick values
 		// printf("%f, %f, %f\n", joystickCh1, joystickCh3, joystickCh4);
 
@@ -321,6 +328,25 @@ void opcontrol()
 			back_right_mtr.move_velocity(-joystickCh3 + joystickCh1 - joystickCh4);
 			back_left_mtr.move_velocity(joystickCh3 + joystickCh1 - joystickCh4);
 
+			// if (!controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+			// {
+			// 	front_right_mtr.move_velocity(-200);
+			// 	front_left_mtr.move_velocity(200);
+			// 	back_right_mtr.move_velocity(-200);
+			// 	back_left_mtr.move_velocity(200);
+			// }
+			// else
+			// {
+			// 	front_right_mtr.move_velocity(0);
+			// 	front_left_mtr.move_velocity(0);
+			// 	back_right_mtr.move_velocity(0);
+			// 	back_left_mtr.move_velocity(0);
+			// }
+
+			// printf("%f, %f, %f, %f, ", front_left_mtr.get_actual_velocity(), front_right_mtr.get_actual_velocity(), back_left_mtr.get_actual_velocity(), back_right_mtr.get_actual_velocity());
+			// printf("%f, %f, %f, %f\n", front_left_mtr.get_torque(), front_right_mtr.get_torque(), back_left_mtr.get_torque(), back_right_mtr.get_torque());
+			// printf("%f, %f, %f, %f\n", front_left_mtr.get_voltage(), front_right_mtr.get_voltage(), back_left_mtr.get_voltage(), back_right_mtr.get_voltage());
+
 			// front_right_mtr.move_velocity(-joystickCh3 + joystickCh4);
 			// front_left_mtr.move_velocity(joystickCh3 + joystickCh4);
 			// back_right_mtr.move_velocity(-joystickCh3 - joystickCh4);
@@ -343,15 +369,10 @@ void opcontrol()
 
 			double joystickMag = hypot(joystickCh4, joystickCh3);
 
-			moveSpeed += (((joystickMag - moveSpeed) > 0) - ((joystickMag - moveSpeed) < 0)) * 20;
-			rotSpeed += (((joystickCh1 - rotSpeed) > 0) - ((joystickCh1 - rotSpeed) < 0)) * 20;
-			if (moveSpeed > joystickMag)
-			{
-				moveSpeed = joystickMag;
-			}
+			moveSpeed = slew(joystickMag, moveSpeed, 20);
+			rotSpeed = slew(joystickCh1, rotSpeed, 20);
 
 			// Move at angle while rotating
-			printf("moveSpeed: %f\n", moveSpeed);
 			front_right_mtr.move(-xPowerPercentage * moveSpeed + rotSpeed);
 			front_left_mtr.move(yPowerPercentage * moveSpeed + rotSpeed);
 			back_right_mtr.move(-yPowerPercentage * moveSpeed + rotSpeed);
