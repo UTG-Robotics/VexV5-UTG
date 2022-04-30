@@ -177,6 +177,7 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
     // Initialize PID constants
 
     PID speedPID = PID(0.09, 0.001, 0.3);
+    // PID speedPID = PID(0.09, 0.001, 0.3);
     PID anglePID = PID(0.01, 0, 0);
 
     double speedLimit = maxSpeed;
@@ -207,6 +208,8 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
 
         xDiff = targetX - xPos;
         yDiff = targetY - yPos;
+        // printf("x: %f y: %f\n", xPos, yPos);
+        // printf("x: %f y: %f\n", xDiff, yDiff);
         oldTargetX = targetX;
         oldTargetY = targetY;
         oldTargetAngleGlobal = targetAngleGlobal;
@@ -217,9 +220,10 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
 
         speedSpeed = speedPID.calculate(errorSpeed);
         speedAngle = anglePID.calculate(errorAngle);
+        // speedAngle = 0;
 
-        speedSpeed = std::clamp(speedSpeed * 127, speedLimit, -speedLimit) / 127;
-        speedAngle = std::clamp(speedAngle * 127, speedLimit, -speedLimit) / 127;
+        speedSpeed = std::clamp(speedSpeed * 127.0, -speedLimit, speedLimit) / 127.0;
+        speedAngle = std::clamp(speedAngle * 127.0, -speedLimit, speedLimit) / 127.0;
 
         // Calculate angle needed to drive at to go to the point
         driveAngle = atan2(targetX - xPos, targetY - yPos) + angle + M_PI / 2;
@@ -232,8 +236,9 @@ void driveToPoint(double x, double y, double targetAngle, double maxSpeed, int t
         maxRatio = std::max(abs(xRatio), abs(yRatio));
         xPowerPercentage = (xRatio / maxRatio);
         yPowerPercentage = (yRatio / maxRatio);
-
+        // printf("%f\n", errorAngle);
         // Move at angle while rotating
+        // speedAngle = 0;
         front_right_mtr.move(-xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
         front_left_mtr.move(yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
         back_right_mtr.move(-yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));

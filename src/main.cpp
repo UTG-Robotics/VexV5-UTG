@@ -28,8 +28,6 @@ pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(20);
 pros::Rotation sideEncoder(7);
 
-pros::ADIPotentiometer potentiometer(1, pros::E_ADI_POT_EDR);
-
 pros::Motor front_right_mtr(6);
 pros::Motor front_left_mtr(5);
 pros::Motor back_right_mtr(16);
@@ -49,6 +47,7 @@ pros::Motor back_claw_mtr(9);
 void initialize()
 {
 	pros::Task odometry_task(odometry);
+
 
 #ifdef RECORD
 	pros::Task replay_task(savePos);
@@ -158,9 +157,13 @@ the odometry, and the tracking,
 */
 void autonomous()
 {
+	std::cout << "teste" << std::endl;
+
 	if (selector::auton == 1)
 	{
-		driveToPoint(0, 22, 5, 60, 850);
+		std::cout << "teste0" << std::endl;
+
+		driveToPoint(0, 22, 0, 60, 850);
 		move_relative_blocking(claw_mtr, 2400, 100, 1000);
 		driveToPoint(0, 16, 5, 60, 300);
 		move_relative_blocking(claw_mtr, -2400, 100, 1000);
@@ -171,6 +174,8 @@ void autonomous()
 	}
 	if (selector::auton == 2)
 	{
+		std::cout << "teste1" << std::endl;
+
 		driveToPoint(0, 18, 0, 60, 750);
 		move_relative_blocking(claw_mtr, 2400, 100, 1000);
 		driveToPoint(14, 8, 90, 60, 500);
@@ -185,6 +190,8 @@ void autonomous()
 
 	if (selector::auton == 3)
 	{
+		std::cout << "teste2" << std::endl;
+
 		driveToPoint(-22, 46, 5, 127, 1500);
 		driveToPoint(-22, 52, 5, 127, 100);
 		move_relative_blocking(claw_mtr, 2400, 127, 1000);
@@ -194,6 +201,7 @@ void autonomous()
 	}
 	if (selector::auton == 4)
 	{
+		std::cout << "teste3" << std::endl;
 		driveToPoint(22, 10, 0, 127, 100);
 
 		driveToPoint(22, 44, 0, 100, 750);
@@ -239,14 +247,14 @@ void opcontrol()
 
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
 	// rotateToAngle(360 * 5);
 	// driveToPoint(0, 0, 360 * 5, 127);
 	while (true)
 	{
-		printf("%f\n", potentiometer.get_angle());
+		// printf("%f\n", potentiometer.get_angle());
 		if (startReplay)
 		{
 			driveToPoint(0, 0, 0, 127);
@@ -284,14 +292,17 @@ void opcontrol()
 			arm_mtr_right.move(10);
 			arm_mtr_left.move(10);
 		}
-
+		if (claw_mtr.get_voltage() < 0 && claw_mtr.get_actual_velocity() == 0)
+		{
+			claw_mtr.brake();
+		}
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
 		{
 			claw_mtr.move(127);
 		}
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
 		{
-			claw_mtr.move(-127);
+			claw_mtr.move(-100);
 		}
 		// else if (abs(claw_mtr.get_power()) > 4)
 		// {
@@ -301,14 +312,17 @@ void opcontrol()
 		{
 			claw_mtr.move(0);
 		}
-
+		if (back_claw_mtr.get_voltage() < 0 && back_claw_mtr.get_actual_velocity() == 0)
+		{
+			back_claw_mtr.brake();
+		}
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
 		{
-			back_claw_mtr.move(127);
+			back_claw_mtr.move(-100);
 		}
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
 		{
-			back_claw_mtr.move(-127);
+			back_claw_mtr.move(127);
 		}
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
 		{
@@ -316,10 +330,10 @@ void opcontrol()
 		}
 		// Motor speed control
 
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-		{
-			angle = 0;
-		}
+		// if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+		// {
+		// 	angle = 0;
+		// }
 
 		if (!fieldCentric)
 		{
