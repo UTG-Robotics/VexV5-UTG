@@ -84,6 +84,7 @@ void updatePosition(int i)
     lastRightPos = curRight;
     lastSidePos = curSide;
     oldGyro = curGyro;
+    // printf("X: %f Y: %f Angle: %f\n", xPos, yPos, angle);
     // Debug Info
     /*
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));

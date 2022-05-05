@@ -12,4 +12,5 @@ public:
     double error;
     PID(double _Ki, double _Kp, double _Kd);
     double calculate(double _error);
+    void clear();
 };

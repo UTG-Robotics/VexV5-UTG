@@ -7,6 +7,13 @@ PID::PID(double _Kp, double _Ki, double _Kd)
     this->Kd = _Kd;
 }
 
+void PID::clear()
+{
+    this->integral = 0;
+    this->lastError = 0;
+    return;
+}
+
 double PID::calculate(double _error)
 {
     this->lastError = this->error;
@@ -14,7 +21,7 @@ double PID::calculate(double _error)
 
     if (this->Ki != 0)
     {
-        if (abs(this->error) > 1)
+        if (abs(integral) > 200)
         {
             integral = 0;
         }

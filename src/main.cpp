@@ -37,6 +37,8 @@ pros::Motor arm_mtr_right(10);
 pros::Motor claw_mtr(8);
 pros::Motor back_claw_mtr(9);
 
+Arm arm(1, 10, 1);
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -47,7 +49,6 @@ pros::Motor back_claw_mtr(9);
 void initialize()
 {
 	pros::Task odometry_task(odometry);
-
 
 #ifdef RECORD
 	pros::Task replay_task(savePos);
@@ -61,6 +62,7 @@ void initialize()
 	arm_mtr_left.set_reversed(true);
 	claw_mtr.set_reversed(true);
 	back_claw_mtr.set_reversed(true);
+	pros::delay(2000);
 }
 
 void savePos()
@@ -158,10 +160,16 @@ the odometry, and the tracking,
 void autonomous()
 {
 	std::cout << "teste" << std::endl;
+	leftEncoder.reset();
+	rightEncoder.reset();
+	sideEncoder.reset();
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	sideEncoder.reset_position();
 
+	selector::auton = 3;
 	if (selector::auton == 1)
 	{
-		std::cout << "teste0" << std::endl;
 
 		driveToPoint(0, 22, 0, 60, 850);
 		move_relative_blocking(claw_mtr, 2400, 100, 1000);
@@ -170,11 +178,11 @@ void autonomous()
 		driveToPoint(0, 8, 5, 60, 150);
 		driveToPoint(49, 22, -85, 80, 2000);
 		move_relative_blocking(claw_mtr, 2400, 100, 1000);
+		arm.asyncMoveToAngle(50, 60);
 		driveToPoint(20, 20, -90, 100);
 	}
 	if (selector::auton == 2)
 	{
-		std::cout << "teste1" << std::endl;
 
 		driveToPoint(0, 18, 0, 60, 750);
 		move_relative_blocking(claw_mtr, 2400, 100, 1000);
@@ -190,18 +198,18 @@ void autonomous()
 
 	if (selector::auton == 3)
 	{
-		std::cout << "teste2" << std::endl;
 
 		driveToPoint(-22, 46, 5, 127, 1500);
 		driveToPoint(-22, 52, 5, 127, 100);
 		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-
+		arm.asyncMoveToAngle(50, 60);
 		driveToPoint(-22, 20, 0, 100, 2000);
+		arm.moveToAngle(0, 60);
+
 		move_relative_blocking(claw_mtr, -2400, 100, 3000);
 	}
 	if (selector::auton == 4)
 	{
-		std::cout << "teste3" << std::endl;
 		driveToPoint(22, 10, 0, 127, 100);
 
 		driveToPoint(22, 44, 0, 100, 750);
@@ -243,15 +251,15 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
-	pros::delay(2000);
-
+	arm.setMode(false);
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-
 	// rotateToAngle(360 * 5);
 	// driveToPoint(0, 0, 360 * 5, 127);
+	// arm.moveToAngle(65, 100);
+
 	while (true)
 	{
 		// printf("%f\n", potentiometer.get_angle());
@@ -275,22 +283,18 @@ void opcontrol()
 
 		// print all joystick values
 		// printf("%f, %f, %f\n", joystickCh1, joystickCh3, joystickCh4);
-
 		// Control arm
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
 		{
-			arm_mtr_right.move(-50);
-			arm_mtr_left.move(-50);
+			arm.moveAtSpeed(-50);
 		}
 		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
 		{
-			arm_mtr_right.move(127);
-			arm_mtr_left.move(127);
+			arm.moveAtSpeed(127);
 		}
 		else
 		{
-			arm_mtr_right.move(10);
-			arm_mtr_left.move(10);
+			arm.moveAtSpeed(10);
 		}
 		if (claw_mtr.get_voltage() < 0 && claw_mtr.get_actual_velocity() == 0)
 		{
