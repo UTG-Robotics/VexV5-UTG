@@ -19,8 +19,8 @@ to replay, will record otherwise
 double xPos = 0;
 double yPos = 0;
 double angle = 0;
+int selectedAuto = 0;
 
-extern int selectedAuto;
 bool startReplay = false;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -205,7 +205,7 @@ void autonomous()
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
 
-	selectedAuto = 2;
+	selectedAuto = 0;
 	if (selectedAuto == 0)
 	{
 
@@ -330,7 +330,6 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
-	arm.setMode(false);
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -339,6 +338,10 @@ void opcontrol()
 	// driveToPoint(0, 0, 360 * 5, 127);
 	// arm.moveToAngle(65, 100);
 	spinner.move(127);
+
+	pros::delay(5000);
+	autonomous();
+	arm.setMode(false);
 	while (true)
 	{
 		// printf("%f\n", potentiometer.get_angle());

@@ -67,6 +67,7 @@ extern pros::Motor arm_mtr_left;
 extern pros::Motor arm_mtr_right;
 extern pros::Motor claw_mtr;
 extern pros::Motor back_claw_mtr;
+extern int selectedAuto;
 
 void savePos();
 void replayPos();
