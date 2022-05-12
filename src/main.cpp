@@ -20,6 +20,7 @@ double xPos = 0;
 double yPos = 0;
 double angle = 0;
 
+extern int selectedAuto;
 bool startReplay = false;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -37,6 +38,8 @@ pros::Motor arm_mtr_right(10);
 pros::Motor claw_mtr(8);
 pros::Motor back_claw_mtr(9);
 
+pros::Motor spinner(4);
+
 Arm arm(1, 10, 1);
 
 /**
@@ -46,9 +49,43 @@ Arm arm(1, 10, 1);
  * to keep execution time for this mode under a few seconds.
  */
 
+void autoSelector()
+{
+	std::string autos[5] = {"Left Win Point", "Right Win Point", "Left Center Goal", "Right Center Goal", "Skills Autonomous"};
+	selectedAuto = 0;
+	std::string autoString = autos[selectedAuto];
+	controller.clear();
+	pros::delay(50);
+	controller.set_text(0, ceil((19 - autoString.length()) / 2), autoString);
+	while (true)
+	{
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && selectedAuto > 0)
+		{
+			selectedAuto--;
+			controller.clear();
+			autoString = autos[selectedAuto];
+			pros::delay(50);
+			controller.set_text(0, ceil((20 - autoString.length()) / 2), autoString);
+			pros::delay(50);
+		}
+		else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && selectedAuto < 4)
+		{
+			selectedAuto++;
+			controller.clear();
+			autoString = autos[selectedAuto];
+			pros::delay(50);
+			controller.set_text(0, ceil((20 - autoString.length()) / 2), autoString);
+			pros::delay(50);
+		}
+		pros::delay(20);
+		printf("%d\n", autoString);
+	}
+}
+
 void initialize()
 {
 	pros::Task odometry_task(odometry);
+	pros::Task selector_task(autoSelector);
 
 #ifdef RECORD
 	pros::Task replay_task(savePos);
@@ -125,7 +162,9 @@ void disabled() {}
 
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize()
+{
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -159,7 +198,6 @@ the odometry, and the tracking,
 */
 void autonomous()
 {
-	std::cout << "teste" << std::endl;
 	leftEncoder.reset();
 	rightEncoder.reset();
 	sideEncoder.reset();
@@ -167,8 +205,8 @@ void autonomous()
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
 
-	selector::auton = 3;
-	if (selector::auton == 1)
+	selectedAuto = 2;
+	if (selectedAuto == 0)
 	{
 
 		driveToPoint(0, 22, 0, 60, 850);
@@ -181,7 +219,7 @@ void autonomous()
 		arm.asyncMoveToAngle(50, 60);
 		driveToPoint(20, 20, -90, 100);
 	}
-	if (selector::auton == 2)
+	if (selectedAuto == 1)
 	{
 
 		driveToPoint(0, 18, 0, 60, 750);
@@ -196,7 +234,7 @@ void autonomous()
 		move_relative_blocking(claw_mtr, -2400, 100, 1000);
 	}
 
-	if (selector::auton == 3)
+	if (selectedAuto == 2)
 	{
 
 		driveToPoint(-22, 46, 5, 127, 1500);
@@ -208,7 +246,7 @@ void autonomous()
 
 		move_relative_blocking(claw_mtr, -2400, 100, 3000);
 	}
-	if (selector::auton == 4)
+	if (selectedAuto == 3)
 	{
 		driveToPoint(22, 10, 0, 127, 100);
 
@@ -217,6 +255,47 @@ void autonomous()
 		move_relative_blocking(claw_mtr, 2400, 127, 1000);
 
 		driveToPoint(22, 20, 0, 100, 1000);
+	}
+
+	if (selectedAuto == 4)
+	{
+		// grab neutral goal
+		driveToPoint(-22, 46, 5, 127, 1500);
+		driveToPoint(-22, 52, 5, 127, 100);
+		move_relative_blocking(claw_mtr, 2400, 127, 1000);
+		arm.asyncMoveToAngle(110, 127);
+		// Put neutral goal on platform
+		driveToPoint(-50, 105, 10, 100, 2000);
+		// driveToPoint(-56, 21, 170, 100, 2000);
+		arm.moveToAngle(75, 40);
+		pros::delay(500);
+		move_relative_blocking(claw_mtr, -2400, 100, 3000);
+
+		// get WP red goal
+		driveToPoint(-43, 95, 10, 100, 500);
+		arm.asyncMoveToAngle(0, 60);
+		driveToPoint(-12, 94, -90, 100, 2000);
+		driveToPoint(-6, 94, -90, 100, 800);
+		move_relative_blocking(claw_mtr, 2400, 127, 1000);
+		arm.asyncMoveToAngle(110, 100);
+		// Put WP red goal on platform
+		driveToPoint(-56, 21, 170, 100, 3000);
+		arm.moveToAngle(75, 40);
+		move_relative_blocking(claw_mtr, -2400, 100, 3000);
+		driveToPoint(-56, 26, 170, 100, 500);
+		// Get WP blue goal
+		arm.asyncMoveToAngle(0, 60);
+		driveToPoint(-97, 30, 90, 100, 3000);
+		driveToPoint(-105, 30, 90, 100, 500);
+		move_relative_blocking(claw_mtr, 2400, 127, 1000);
+		// Score WP blue goal
+		arm.asyncMoveToAngle(60, 127);
+
+		driveToPoint(-100, 46, 175, 127, 1500);
+		driveToPoint(-100, 52, 175, 127, 500);
+		move_relative_blocking(back_claw_mtr, 2400, 200, 3000);
+
+		// driveToPoint(-30, 105, 10, 100, 2000);
 	}
 }
 
@@ -259,7 +338,7 @@ void opcontrol()
 	// rotateToAngle(360 * 5);
 	// driveToPoint(0, 0, 360 * 5, 127);
 	// arm.moveToAngle(65, 100);
-
+	spinner.move(127);
 	while (true)
 	{
 		// printf("%f\n", potentiometer.get_angle());

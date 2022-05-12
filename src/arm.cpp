@@ -6,9 +6,9 @@ void armTask(void *param)
     double speed = 0;
     while (true)
     {
+        printf("%f\n", arm->getAngle());
         if (arm->isEnabled)
         {
-            printf("%f\n", arm->error);
             arm->error = arm->asyncTargetPos - arm->getAngle();
             speed = arm->updatePID(arm->error);
             speed = std::clamp(speed * 127, -arm->maxSpeed, arm->maxSpeed) / 127;
@@ -28,7 +28,8 @@ Arm::Arm(int leftMotorPort, int rightMotorPort, int potPort)
     this->leftArmMotor = new pros::Motor(leftMotorPort);
     this->rightArmMotor = new pros::Motor(rightMotorPort);
     this->armPot = new pros::ADIPotentiometer(potPort, pros::E_ADI_POT_EDR);
-    this->armOffset = 79.914530;
+    // this->armOffset = 155;
+    this->armOffset = 11.233211;
     pros::Task ArmTask(armTask, (void *)this);
 }
 
