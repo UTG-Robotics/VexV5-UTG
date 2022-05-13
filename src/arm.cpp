@@ -6,7 +6,7 @@ void armTask(void *param)
     double speed = 0;
     while (true)
     {
-        printf("%f\n", arm->getAngle());
+        // printf("%f\n", arm->getAngle());
         if (arm->isEnabled)
         {
             arm->error = arm->asyncTargetPos - arm->getAngle();

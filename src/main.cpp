@@ -20,7 +20,7 @@ double xPos = 0;
 double yPos = 0;
 double angle = 0;
 int selectedAuto = 0;
-
+bool hasAutoStarted = false;
 bool startReplay = false;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -57,7 +57,7 @@ void autoSelector()
 	controller.clear();
 	pros::delay(50);
 	controller.set_text(0, ceil((19 - autoString.length()) / 2), autoString);
-	while (true)
+	while (!hasAutoStarted)
 	{
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && selectedAuto > 0)
 		{
@@ -78,7 +78,7 @@ void autoSelector()
 			pros::delay(50);
 		}
 		pros::delay(20);
-		printf("%d\n", autoString);
+		// printf("%d\n", selectedAuto);
 	}
 }
 
@@ -205,7 +205,8 @@ void autonomous()
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
 
-	selectedAuto = 0;
+	// selectedAuto = 0;
+	hasAutoStarted = true;
 	if (selectedAuto == 0)
 	{
 
@@ -314,7 +315,8 @@ void autonomous()
  */
 void opcontrol()
 {
-
+	// pros::delay(5000);
+	// autonomous();
 	bool fieldCentric = false;
 	double moveSpeed = 0;
 	double rotSpeed = 0;
@@ -330,6 +332,7 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
+	arm.setMode(false);
 	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -339,9 +342,6 @@ void opcontrol()
 	// arm.moveToAngle(65, 100);
 	spinner.move(127);
 
-	pros::delay(5000);
-	autonomous();
-	arm.setMode(false);
 	while (true)
 	{
 		// printf("%f\n", potentiometer.get_angle());
