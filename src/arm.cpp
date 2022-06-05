@@ -13,7 +13,7 @@ void armTask(void *param)
             speed = arm->updatePID(arm->error);
             speed = std::clamp(speed * 127, -arm->maxSpeed, arm->maxSpeed) / 127;
             printf("%f %f\n", speed * 127, arm->error);
-            if (abs(arm->error) > 0.5)
+            if (abs(arm->error) > 0.5) 
             {
                 arm->moveAtSpeed(speed * 127);
             }
