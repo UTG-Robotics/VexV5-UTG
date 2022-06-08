@@ -46,7 +46,8 @@
 #include "robot.hpp"
 #include "arm.hpp"
 #include "pid.hpp"
-#include "okapi/api.hpp"
+#include "motorGroup.hpp"
+// #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
 extern double xPos;
@@ -83,7 +84,7 @@ void replayPos();
 // using namespace pros;
 // using namespace okapi;
 // using namespace pros::literals;
-using namespace okapi::literals;
+// using namespace okapi::literals;
 
 /**
  * Prototypes for the competition control tasks are redefined here to ensure
