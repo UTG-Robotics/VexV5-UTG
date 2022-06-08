@@ -1,6 +1,9 @@
 #include "emaFilter.hpp"
 
-emaFilter::emaFilter(double alpha) : emaFilter::alpha(alpha) {}
+emaFilter::emaFilter(double alpha)
+{
+    this->alpha = alpha;
+}
 
 double emaFilter::filter(double input)
 {
