@@ -87,65 +87,11 @@ void initialize()
 	pros::Task odometry_task(odometry);
 	pros::Task selector_task(autoSelector);
 
-#ifdef RECORD
-	pros::Task replay_task(savePos);
-#endif
-
-#ifdef REPLAY
-	pros::Task replay_task(replayPos);
-#endif
-
 	selector::init();
 	arm_mtr_left.set_reversed(true);
 	claw_mtr.set_reversed(true);
 	back_claw_mtr.set_reversed(true);
 	pros::delay(2000);
-}
-
-void savePos()
-{
-	std::ofstream myfile;
-	myfile.open("/usd/PosData.txt");
-	myfile.close();
-	std::uint32_t now = pros::millis();
-	int curTime = pros::millis();
-	int lastTime = pros::millis();
-	// pros::controller_print(CONTROLLER_MASTER, 0, 6, "Recording");
-	while (true)
-	{
-		if ((abs(xPos) > 0.1 || yPos > 0.1 || angle * 180 / M_PI > 0.5))
-		{
-			lastTime = curTime;
-			myfile.open("/usd/PosData.txt", std::ios_base::app);
-			curTime = pros::micros();
-			myfile
-				<< xPos << " " << yPos << " " << angle * 180 / M_PI << " " << curTime - lastTime << std::endl;
-			myfile.close();
-		}
-		pros::Task::delay_until(&now, 20);
-	}
-}
-void replayPos()
-{
-	printf(pros::usd::is_installed() ? "true" : "false");
-	printf("Opening File\n\n");
-	std::ifstream infile("/usd/PosData.txt");
-	printf("File Opened\n\n");
-	pros::delay(2000);
-	controller.set_text(0, 0, "Starting Replay");
-	printf("Replay Starting\n\n");
-	double tempX, tempY, tempAngle, tempTime;
-	startReplay = true;
-	std::uint32_t now = pros::millis();
-	while (infile >> tempX >> tempY >> tempAngle >> tempTime)
-	{
-		targetX = tempX;
-		targetY = tempY;
-		targetAngleGlobal = tempAngle;
-		printf("%f\n", tempTime);
-		pros::delay(20);
-		// pros::Task::delay_until(&now, tempTime / 1000.0);
-	}
 }
 
 /**
@@ -207,97 +153,6 @@ void autonomous()
 
 	// selectedAuto = 0;
 	hasAutoStarted = true;
-	if (selectedAuto == 0)
-	{
-
-		driveToPoint(0, 22, 0, 60, 850);
-		move_relative_blocking(claw_mtr, 2400, 100, 1000);
-		driveToPoint(0, 16, 5, 60, 300);
-		move_relative_blocking(claw_mtr, -2400, 100, 1000);
-		driveToPoint(0, 8, 5, 60, 150);
-		driveToPoint(49, 22, -85, 80, 2000);
-		move_relative_blocking(claw_mtr, 2400, 100, 1000);
-		arm.asyncMoveToAngle(50, 60);
-		driveToPoint(20, 20, -90, 100);
-	}
-	if (selectedAuto == 1)
-	{
-
-		driveToPoint(0, 18, 0, 60, 750);
-		move_relative_blocking(claw_mtr, 2400, 100, 1000);
-		driveToPoint(14, 8, 90, 60, 500);
-		move_relative_blocking(claw_mtr, -2400, 100, 1000);
-		driveToPoint(23, 8, 90, 80, 600);
-		driveToPoint(23, 48, 0, 80, 1000);
-		driveToPoint(23, 50, 0, 80, 250);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-		driveToPoint(23, 15, 0, 80, 1000);
-		move_relative_blocking(claw_mtr, -2400, 100, 1000);
-	}
-
-	if (selectedAuto == 2)
-	{
-
-		driveToPoint(-22, 46, 5, 127, 1500);
-		driveToPoint(-22, 52, 5, 127, 100);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-		arm.asyncMoveToAngle(50, 60);
-		driveToPoint(-22, 20, 0, 100, 2000);
-		arm.moveToAngle(0, 60);
-
-		move_relative_blocking(claw_mtr, -2400, 100, 3000);
-	}
-	if (selectedAuto == 3)
-	{
-		driveToPoint(22, 10, 0, 127, 100);
-
-		driveToPoint(22, 44, 0, 100, 750);
-		driveToPoint(22, 53, 0, 127, 100);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-
-		driveToPoint(22, 20, 0, 100, 1000);
-	}
-
-	if (selectedAuto == 4)
-	{
-		// grab neutral goal
-		driveToPoint(-22, 46, 5, 127, 1500);
-		driveToPoint(-22, 52, 5, 127, 100);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-		arm.asyncMoveToAngle(110, 127);
-		// Put neutral goal on platform
-		driveToPoint(-50, 105, 10, 100, 2000);
-		// driveToPoint(-56, 21, 170, 100, 2000);
-		arm.moveToAngle(75, 40);
-		pros::delay(500);
-		move_relative_blocking(claw_mtr, -2400, 100, 3000);
-
-		// get WP red goal
-		driveToPoint(-43, 95, 10, 100, 500);
-		arm.asyncMoveToAngle(0, 60);
-		driveToPoint(-12, 94, -90, 100, 2000);
-		driveToPoint(-6, 94, -90, 100, 800);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-		arm.asyncMoveToAngle(110, 100);
-		// Put WP red goal on platform
-		driveToPoint(-56, 21, 170, 100, 3000);
-		arm.moveToAngle(75, 40);
-		move_relative_blocking(claw_mtr, -2400, 100, 3000);
-		driveToPoint(-56, 26, 170, 100, 500);
-		// Get WP blue goal
-		arm.asyncMoveToAngle(0, 60);
-		driveToPoint(-97, 30, 90, 100, 3000);
-		driveToPoint(-105, 30, 90, 100, 500);
-		move_relative_blocking(claw_mtr, 2400, 127, 1000);
-		// Score WP blue goal
-		arm.asyncMoveToAngle(60, 127);
-
-		driveToPoint(-100, 46, 175, 127, 1500);
-		driveToPoint(-100, 52, 175, 127, 500);
-		move_relative_blocking(back_claw_mtr, 2400, 200, 3000);
-
-		// driveToPoint(-30, 105, 10, 100, 2000);
-	}
 }
 
 /**
@@ -369,8 +224,8 @@ void opcontrol()
 
 			double joystickMag = hypot(joystickCh4, joystickCh3);
 
-			moveSpeed = slew(joystickMag, moveSpeed, 20);
-			rotSpeed = slew(joystickCh1, rotSpeed, 20);
+			moveSpeed = joystickMag;
+			rotSpeed = joystickCh1;
 
 			// Move at angle while rotating
 			front_right_mtr.move(-xPowerPercentage * moveSpeed + rotSpeed);
