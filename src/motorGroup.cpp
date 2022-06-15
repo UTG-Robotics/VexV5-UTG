@@ -118,6 +118,90 @@ int MotorGroup::modify_profiled_velocity(int voltage)
     return out;
 }
 
+int MotorGroup::set_brake_mode(pros::motor_brake_mode_e_t mode)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->set_brake_mode(mode);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
+int MotorGroup::set_current_limit(int limit)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->set_brake_mode(limit);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
+int MotorGroup::set_encoder_units(pros::motor_encoder_units_e_t units)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->set_encoder_units(units);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
+int MotorGroup::set_voltage_limit(int limit)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->set_voltage_limit(limit);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
+int MotorGroup::set_zero_position(double position)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->set_zero_position(position);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
+int MotorGroup::tare_position(void)
+{
+    int out = 1;
+    for (auto motor : this->motors)
+    {
+        int errorCode = motor->tare_position(void);
+        if (errorCode != 1)
+        {
+            out = errorCode;
+        }
+    }
+    return out;
+}
+
 double MotorGroup::get_target_position(void)
 {
     return this->motors.at(0)->get_target_position();
@@ -171,4 +255,69 @@ double MotorGroup::get_power(void)
 int MotorGroup::get_raw_position(void)
 {
     return this->motors.at(0)->get_raw_position();
+}
+
+double MotorGroup::get_temperature(void)
+{
+    return this->motors.at(0)->get_temperature();
+}
+
+double MotorGroup::get_torque(void)
+{
+    return this->motors.at(0)->get_torque();
+}
+
+int MotorGroup::get_voltage(void)
+{
+    return this->motors.at(0)->get_voltage();
+}
+
+int MotorGroup::get_zero_position_flag(void)
+{
+    return this->motors.at(0)->get_zero_position_flag();
+}
+
+int MotorGroup::motor_is_stopped(void)
+{
+    return this->motors.at(0)->motor_is_stopped();
+}
+
+int MotorGroup::is_over_current(void)
+{
+    return this->motors.at(0)->is_over_current();
+}
+
+int MotorGroup::is_over_temp(void)
+{
+    return this->motors.at(0)->is_over_temp();
+}
+
+pros::motor_brake_mode_e_t MotorGroup::get_brake_mode(void)
+{
+    return this->motors.at(0)->get_brake_mode();
+}
+
+int MotorGroup::get_current_limit(void)
+{
+    return this->motors.at(0)->get_current_limit();
+}
+
+pros::motor_encoder_units_e_t MotorGroup::get_encoder_units(void)
+{
+    return this->motors.at(0)->get_encoder_units();
+}
+
+int MotorGroup::get_voltage_limit(void)
+{
+    return this->motors.at(0)->get_voltage_limit();
+}
+
+int MotorGroup::get_voltage_limit(void)
+{
+    return this->motors.at(0)->get_voltage_limit();
+}
+
+int MotorGroup::get_voltage_limit(void)
+{
+    return this->motors.at(0)->get_voltage_limit();
 }
