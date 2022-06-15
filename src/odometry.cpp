@@ -22,6 +22,12 @@ float deltaTheta = 0;
 float delta_forward_pos = 0;
 float delta_side_pos = 0;
 
+double deltaLocalX = 0;
+double deltaLocalY = 0;
+double thetaOffset = 0;
+double deltaCoordinateMagnitude = 0;
+double deltaCoordinateAngle = 0;
+
 float deltaX = 0;
 float deltaY = 0;
 
