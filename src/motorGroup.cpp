@@ -20,7 +20,7 @@ MotorGroup::MotorGroup(const std::initializer_list<int> _motors, const std::init
     }
 }
 
-int MotorGroup::move(const int voltage)
+int MotorGroup::move(int voltage)
 {
     int out = 1;
     for (auto motor : this->motors)
@@ -53,7 +53,7 @@ int MotorGroup::move_velocity(int velocity)
     int out = 1;
     for (auto motor : this->motors)
     {
-        int errorCode = motor->move_velocity(position, velocity);
+        int errorCode = motor->move_velocity(velocity);
         if (errorCode != 1)
         {
             out = errorCode;
@@ -77,8 +77,6 @@ int MotorGroup::brake(void)
 }
 
 int MotorGroup::move_voltage(int voltage)
-
-    int MotorGroup::move_voltage(int voltage)
 {
     int out = 1;
     for (auto motor : this->motors)
@@ -125,7 +123,7 @@ int MotorGroup::set_current_limit(int limit)
     int out = 1;
     for (auto motor : this->motors)
     {
-        int errorCode = motor->set_brake_mode(limit);
+        int errorCode = motor->set_current_limit(limit);
         if (errorCode != 1)
         {
             out = errorCode;
@@ -181,7 +179,7 @@ int MotorGroup::tare_position(void)
     int out = 1;
     for (auto motor : this->motors)
     {
-        int errorCode = motor->tare_position(void);
+        int errorCode = motor->tare_position();
         if (errorCode != 1)
         {
             out = errorCode;
@@ -240,11 +238,6 @@ double MotorGroup::get_power(void)
     return this->motors.at(0)->get_power();
 }
 
-int MotorGroup::get_raw_position(void)
-{
-    return this->motors.at(0)->get_raw_position();
-}
-
 double MotorGroup::get_temperature(void)
 {
     return this->motors.at(0)->get_temperature();
@@ -265,9 +258,9 @@ int MotorGroup::get_zero_position_flag(void)
     return this->motors.at(0)->get_zero_position_flag();
 }
 
-int MotorGroup::motor_is_stopped(void)
+int MotorGroup::is_stopped(void)
 {
-    return this->motors.at(0)->motor_is_stopped();
+    return this->motors.at(0)->is_stopped();
 }
 
 int MotorGroup::is_over_current(void)
