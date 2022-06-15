@@ -77,20 +77,8 @@ int MotorGroup::brake(void)
 }
 
 int MotorGroup::move_voltage(int voltage)
-{
-    int out = 1;
-    for (auto motor : this->motors)
-    {
-        int errorCode = motor->move_voltage(voltage);
-        if (errorCode != 1)
-        {
-            out = errorCode;
-        }
-    }
-    return out;
-}
 
-int MotorGroup::move_voltage(int voltage)
+    int MotorGroup::move_voltage(int voltage)
 {
     int out = 1;
     for (auto motor : this->motors)
@@ -305,16 +293,6 @@ int MotorGroup::get_current_limit(void)
 pros::motor_encoder_units_e_t MotorGroup::get_encoder_units(void)
 {
     return this->motors.at(0)->get_encoder_units();
-}
-
-int MotorGroup::get_voltage_limit(void)
-{
-    return this->motors.at(0)->get_voltage_limit();
-}
-
-int MotorGroup::get_voltage_limit(void)
-{
-    return this->motors.at(0)->get_voltage_limit();
 }
 
 int MotorGroup::get_voltage_limit(void)
