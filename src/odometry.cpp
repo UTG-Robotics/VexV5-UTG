@@ -45,16 +45,35 @@ void updatePosition(int i)
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (wheelDiameter / 2);
 
     // Calculate change in rotation by averaging encoders and gyro
-    deltaTheta = ((curGyro - oldGyro) + (deltaLeft - deltaRight) / (Sl + Sr)) / 2;
+    deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
     // deltaTheta = (deltaLeft - deltaRight) / (Sl + Sr);
 
-    // Calculate change in forward and sideways position
-    delta_forward_pos = (deltaLeft + deltaRight) / 2;
-    delta_side_pos = deltaSide - Ss * deltaTheta;
+    angle += deltaTheta;
 
-    // transform forward and side to X and Y
-    deltaX = delta_forward_pos * cos(angle) + delta_side_pos * sin(angle);
-    deltaY = -delta_forward_pos * sin(angle) + delta_side_pos * cos(angle);
+    if (deltaTheta == 0)
+    {
+        deltaLocalX = deltaSide;
+        deltaLocalY = deltaRight;
+    }
+    else
+    {
+
+        deltaLocalX = 2 * sin(angle / 2) * ((deltaSide / deltaTheta) + Ss);
+        deltaLocalY = 2 * cos(angle / 2) * ((deltaRight / deltaTheta) + Sr);
+    }
+
+    thetaOffset = (angle - deltaTheta) + (deltaTheta / 2);
+
+    // Convert local to polar coordinates
+    deltaCoordinateMagnitude = sqrt(deltaLocalX * deltaLocalX + deltaLocalY * deltaLocalY);
+    deltaCoordinateAngle = atan2(deltaLocalY, deltaLocalX);
+
+    // Rotate by thetaOffset
+    deltaCoordinateAngle -= thetaOffset;
+
+    // Convert back to cartesian coordinates
+    deltaX = deltaCoordinateMagnitude * cos(deltaCoordinateAngle);
+    deltaY = deltaCoordinateMagnitude * sin(deltaCoordinateAngle);
 
     // ensure all numbers are real numbers
     if (deltaTheta != deltaTheta)
@@ -77,7 +96,6 @@ void updatePosition(int i)
     // Acumulate change in X, Y and Rotation
     xPos += deltaY;
     yPos += deltaX;
-    angle += deltaTheta;
 
     // Store old encoder/gyro values
     lastLeftPos = curLeft;
