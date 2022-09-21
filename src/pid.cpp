@@ -14,20 +14,17 @@ void PID::clear()
     return;
 }
 
-double PID::calculate(double _error)
+double PID::calculate(double error)
 {
     this->lastError = this->error;
-    this->error = _error;
+    this->error = error;
 
     if (this->Ki != 0)
     {
-        if (abs(integral) > 200)
+        integral += this->error;
+        if (std::signbit(this->error) != std::signbit(this->lastError))
         {
-            integral = 0;
-        }
-        else
-        {
-            integral += this->error;
+            this->integral *= 0.75;
         }
     }
     else
@@ -36,9 +33,5 @@ double PID::calculate(double _error)
     }
 
     derivative = this->error - this->lastError;
-    if (this->Ki == 0.09)
-    {
-        // printf("2: %f %f %f", this->error, this->Kp, this->error * this->Kp);
-    }
     return this->Kp * this->error + this->Ki * integral + this->Kd * derivative;
 }

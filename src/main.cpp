@@ -2,26 +2,13 @@
 #include "autoSelect/selection.h"
 #include <fstream>
 
-/* Build with
-pros make -- FLAGS=-DREPLAY
-to replay, will record otherwise
-
-*/
-
-// Change this comment to reupload
-
-// #define REPLAY
-
-#ifndef REPLAY
-#define RECORD
-#endif
-
 double xPos = 0;
 double yPos = 0;
 double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
-bool startReplay = false;
+bool isShooting = false;
+int goal;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::IMU gyro(3);
@@ -29,18 +16,17 @@ pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(20);
 pros::Rotation sideEncoder(7);
 
-pros::Motor front_right_mtr(6);
-pros::Motor front_left_mtr(5);
-pros::Motor back_right_mtr(16);
-pros::Motor back_left_mtr(15);
-pros::Motor arm_mtr_left(1);
-pros::Motor arm_mtr_right(10);
-pros::Motor claw_mtr(8);
-pros::Motor back_claw_mtr(9);
+pros::Motor front_right_mtr(11);
+pros::Motor front_left_mtr(20);
+pros::Motor back_right_mtr(10);
+pros::Motor back_left_mtr(2);
 
-pros::Motor spinner(4);
+pros::Motor flywheel_mtr(8);
+pros::Motor intake_mtr(1);
+pros::Motor indexer_mtr(19);
 
-Arm arm(1, 10, 1);
+Flywheel flywheel({8}, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
+// Flywheel flywheel(&flywheel_mtr, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -85,12 +71,8 @@ void autoSelector()
 void initialize()
 {
 	pros::Task odometry_task(odometry);
-	pros::Task selector_task(autoSelector);
 
-	selector::init();
-	arm_mtr_left.set_reversed(true);
-	claw_mtr.set_reversed(true);
-	back_claw_mtr.set_reversed(true);
+	// selector::init();
 	pros::delay(2000);
 }
 
@@ -172,7 +154,6 @@ void opcontrol()
 {
 	// pros::delay(5000);
 	// autonomous();
-	bool fieldCentric = false;
 	double moveSpeed = 0;
 	double rotSpeed = 0;
 
@@ -187,14 +168,15 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
-	arm.setMode(false);
-	arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-	back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	indexer_mtr.set_reversed(true);
+	// arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	// arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	// claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+	// back_claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-	spinner.move(127);
-
+	// Shoot is R1
+	// L1 intake forward. L2 backwards
+	goal = 3000;
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -202,37 +184,53 @@ void opcontrol()
 		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
 		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X) / 127.0 * 200.0;
 
-		if (!fieldCentric)
+		if (controller.get_digital_new_press(DIGITAL_R1))
 		{
-			front_right_mtr.move_velocity(-joystickCh3 + joystickCh1 + joystickCh4);
-			front_left_mtr.move_velocity(joystickCh3 + joystickCh1 + joystickCh4);
-			back_right_mtr.move_velocity(-joystickCh3 + joystickCh1 - joystickCh4);
-			back_left_mtr.move_velocity(joystickCh3 + joystickCh1 - joystickCh4);
+			// shoot
+			isShooting = true;
+			indexer_mtr.tare_position();
+			indexer_mtr.move_absolute(100, 200);
 		}
-		else
+		if (isShooting)
 		{
-			// driveToPoint(0, 0, 3600, 127);
-			double targetAngle = (atan2(-joystickCh4, joystickCh3) + M_PI / 2 + angle);
-
-			double xRatio = -cos(targetAngle + (M_PI / 4));
-			double yRatio = sin(targetAngle + (M_PI / 4));
-
-			// Normalize values to maximum of 1
-			double maxRatio = std::max(abs(xRatio), abs(yRatio));
-			double xPowerPercentage = (xRatio / maxRatio);
-			double yPowerPercentage = (yRatio / maxRatio);
-
-			double joystickMag = hypot(joystickCh4, joystickCh3);
-
-			moveSpeed = joystickMag;
-			rotSpeed = joystickCh1;
-
-			// Move at angle while rotating
-			front_right_mtr.move(-xPowerPercentage * moveSpeed + rotSpeed);
-			front_left_mtr.move(yPowerPercentage * moveSpeed + rotSpeed);
-			back_right_mtr.move(-yPowerPercentage * moveSpeed + rotSpeed);
-			back_left_mtr.move(xPowerPercentage * moveSpeed + rotSpeed);
+			if (indexer_mtr.get_position() - 100 > -20)
+			{
+				isShooting = false;
+				indexer_mtr.move_absolute(0, 200);
+			}
 		}
+
+		if (controller.get_digital(DIGITAL_L1))
+		{
+			// spin intake forwards
+			intake_mtr.move_velocity(200);
+		}
+		else if (controller.get_digital(DIGITAL_L2))
+		{
+			// spin intake backwards
+			intake_mtr.move_velocity(-200);
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_A))
+		{
+			if (goal)
+			{
+				goal = 0;
+			}
+			else
+			{
+				goal = 3000;
+			}
+		}
+		flywheel.setTargetRPM(goal);
+
+		front_right_mtr.move_velocity(-joystickCh3 + joystickCh1 + joystickCh4);
+		front_left_mtr.move_velocity(joystickCh3 + joystickCh1 + joystickCh4);
+		back_right_mtr.move_velocity(-joystickCh3 + joystickCh1 - joystickCh4);
+		back_left_mtr.move_velocity(joystickCh3 + joystickCh1 - joystickCh4);
+
+		// arcade(joystickCh4, joystickCh3, joystickCh1);
+
 		pros::delay(20);
 	}
 }
