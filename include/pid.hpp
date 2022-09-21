@@ -1,3 +1,4 @@
+#pragma once
 class PID
 {
 private:
@@ -11,6 +12,6 @@ private:
 public:
     double error;
     PID(double _Ki, double _Kp, double _Kd);
-    double calculate(double _error);
+    double calculate(double error);
     void clear();
 };

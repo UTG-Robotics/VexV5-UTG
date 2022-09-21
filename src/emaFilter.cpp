@@ -1,15 +1,18 @@
-#include "emaFilter.hpp"
+#include "main.h"
 
-emaFilter::emaFilter(double alpha)
+EMAFilter::EMAFilter(double alpha)
 {
     this->alpha = alpha;
 }
 
-double emaFilter::filter(double input)
+double EMAFilter::filter(double input)
 {
     output = alpha * input + (1.0 - alpha) * lastOutput;
     lastOutput = output;
     return output;
 }
 
-void emaFilter::setGains(double alpha) { emaFilter::alpha = alpha; }
+void EMAFilter::setGains(double alpha)
+{
+    this->alpha = alpha;
+}

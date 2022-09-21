@@ -42,11 +42,11 @@
  * You should add more #includes here
  */
 #include <math.h>
-#include "odometry.hpp"
-#include "robot.hpp"
-#include "arm.hpp"
 #include "pid.hpp"
-#include "motorGroup.hpp"
+#include "odometry.hpp"
+#include "emaFilter.hpp"
+#include "velPID.hpp"
+#include "flywheel.hpp"
 // #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
@@ -64,14 +64,7 @@ extern pros::Motor front_right_mtr;
 extern pros::Motor front_left_mtr;
 extern pros::Motor back_right_mtr;
 extern pros::Motor back_left_mtr;
-extern pros::Motor arm_mtr_left;
-extern pros::Motor arm_mtr_right;
-extern pros::Motor claw_mtr;
-extern pros::Motor back_claw_mtr;
 extern int selectedAuto;
-
-void savePos();
-void replayPos();
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do

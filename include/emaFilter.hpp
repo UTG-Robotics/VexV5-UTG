@@ -1,5 +1,5 @@
 #pragma once
-class emaFilter
+class EMAFilter
 {
 private:
     double alpha = 1.0;
@@ -7,7 +7,7 @@ private:
     double lastOutput = 0.0;
 
 public:
-    emaFilter(double);
+    EMAFilter(double);
     double filter(double);
     void setGains(double);
 };
