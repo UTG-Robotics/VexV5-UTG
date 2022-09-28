@@ -1,10 +1,8 @@
 #include "main.h"
 #include <numeric>
-Flywheel::Flywheel(int motor, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew)
+Flywheel::Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew)
 {
-    pros::Motor tmpMotor = static_cast<pros::Motor>(motor);
-    this->flywheelMotor = &tmpMotor;
-    
+    this->flywheelMotor = motor;
     this->flywheelMotor->set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     this->flywheelMotor->set_reversed(false);
 
@@ -72,9 +70,9 @@ void Flywheel::run()
             sum += averageArray[i];
         }
         double averageRPM = sum / averageLength;
-        // printf("%f,%f\n", output, currentRPM);
+        // printf("%f,%f,%f\n", output, currentRPM, averageRPM);
         pros::lcd::clear_line(1);
-        pros::lcd::set_text(1, "Average: " + std::to_string(averageRPM));
+        // PRINTF1, "Average: " + std::to_string(averageRPM));
 
         oldRPM = currentRPM;
         oldTarget = targetRPM;

@@ -4,7 +4,7 @@
 class Flywheel
 {
 public:
-    Flywheel(int motor, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew);
+    Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew);
     void run();
     static void taskFn(void *param);
     void setTargetRPM(double rpm);
