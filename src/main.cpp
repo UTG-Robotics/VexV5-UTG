@@ -25,7 +25,9 @@ pros::Motor flywheel_mtr(8);
 pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 
-Flywheel flywheel({8}, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
+Flywheel flywheel(&flywheel_mtr, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
+XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
+
 // Flywheel flywheel(&flywheel_mtr, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 
 /**
@@ -73,6 +75,7 @@ void initialize()
 	pros::Task odometry_task(odometry);
 
 	// selector::init();
+	pros::lcd::initialize();
 	pros::delay(2000);
 }
 
@@ -176,7 +179,10 @@ void opcontrol()
 
 	// Shoot is R1
 	// L1 intake forward. L2 backwards
-	goal = 3000;
+	goal = 0;
+
+	intake_mtr.move_velocity(130);
+
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -203,12 +209,12 @@ void opcontrol()
 		if (controller.get_digital(DIGITAL_L1))
 		{
 			// spin intake forwards
-			intake_mtr.move_velocity(200);
+			intake_mtr.move_velocity(130);
 		}
 		else if (controller.get_digital(DIGITAL_L2))
 		{
 			// spin intake backwards
-			intake_mtr.move_velocity(-200);
+			intake_mtr.move_velocity(-130);
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_A))
@@ -222,14 +228,29 @@ void opcontrol()
 				goal = 3000;
 			}
 		}
+		if (controller.get_digital_new_press(DIGITAL_B))
+		{
+			if (goal)
+			{
+				goal = 0;
+			}
+			else
+			{
+				goal = 2500;
+			}
+		}
 		flywheel.setTargetRPM(goal);
-
-		front_right_mtr.move_velocity(-joystickCh3 + joystickCh1 + joystickCh4);
-		front_left_mtr.move_velocity(joystickCh3 + joystickCh1 + joystickCh4);
-		back_right_mtr.move_velocity(-joystickCh3 + joystickCh1 - joystickCh4);
-		back_left_mtr.move_velocity(joystickCh3 + joystickCh1 - joystickCh4);
-
-		// arcade(joystickCh4, joystickCh3, joystickCh1);
+		pros::lcd::clear_line(3);
+		pros::lcd::set_text(3, std::to_string(flywheel.getCurrentRPM()));
+		if (controller.get_digital(DIGITAL_UP))
+		{
+			driveTrain.arcade(0, 127, 0);
+		}
+		else
+		{
+			driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
+		}
+		driveTrain.debug();
 
 		pros::delay(20);
 	}

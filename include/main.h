@@ -42,6 +42,7 @@
  * You should add more #includes here
  */
 #include <math.h>
+#include "XDrive.hpp"
 #include "pid.hpp"
 #include "odometry.hpp"
 #include "emaFilter.hpp"

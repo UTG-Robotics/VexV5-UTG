@@ -46,7 +46,6 @@ void rotateToAngle(double targetAngle)
         speed = Kp * error + Ki * integral + Kd * derivative;
         speed = std::min(speed, 127.0);
         speed = std::max(speed, -127.0);
-        pros::lcd::set_text(1, std::to_string(speed));
 
         front_left_mtr.move(-speed);
         front_right_mtr.move(-speed);
@@ -69,7 +68,6 @@ void rotateToAngle(double targetAngle)
         printf("%f\n", error);
         pros::delay(15);
     }
-    pros::lcd::set_text(1, "Finished");
 
     front_left_mtr.move(0);
     front_right_mtr.move(0);
@@ -125,7 +123,6 @@ void driveForward(double inches)
         speed = Kp * error + Ki * integral + Kd * derivative;
         speed = std::min(speed, 60.0);
         speed = std::max(speed, -60.0);
-        pros::lcd::set_text(1, std::to_string(error));
 
         front_left_mtr.move(-speed);
         front_right_mtr.move(speed);
@@ -144,10 +141,8 @@ void driveForward(double inches)
         {
             break;
         }
-        pros::lcd::set_text(3, "Finish Timer: " + std::to_string(finishTimer));
         pros::delay(10);
     }
-    pros::lcd::set_text(2, "Finished");
 
     front_left_mtr.move(0);
     front_right_mtr.move(0);
@@ -294,29 +289,4 @@ double clampf(double value, double min, double max)
     {
         return value;
     }
-}
-
-double slew(double target, double current, double slewRate)
-{
-    double difference = target - current;
-    int sign = 0;
-
-    if (difference > 0)
-    {
-        sign = 1;
-    }
-    else if (difference < 0)
-    {
-        sign = -1;
-    }
-    current += slewRate * sign;
-    if (current > 0 && current > target)
-    {
-        current = target;
-    }
-    else if (current < 0 && current < target)
-    {
-        current = target;
-    }
-    return current;
 }
