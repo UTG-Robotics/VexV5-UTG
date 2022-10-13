@@ -48,7 +48,7 @@
 #include "emaFilter.hpp"
 #include "velPID.hpp"
 #include "flywheel.hpp"
-// #include "okapi/api.hpp"
+#include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
 extern double xPos;
@@ -76,9 +76,9 @@ extern int selectedAuto;
  * namespace.
  */
 // using namespace pros;
-// using namespace okapi;
+using namespace okapi;
 // using namespace pros::literals;
-// using namespace okapi::literals;
+using namespace okapi::literals;
 
 /**
  * Prototypes for the competition control tasks are redefined here to ensure
