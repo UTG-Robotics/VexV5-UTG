@@ -31,11 +31,10 @@ double deltaCoordinateAngle = 0;
 float deltaX = 0;
 float deltaY = 0;
 
-// pros::Rotation leftEncoder(11);
-// pros::Rotation rightEncoder(20);
-// pros::Rotation sideEncoder(7);
-
-// pros::IMU gyro(3);
+pros::IMU gyro(4);
+pros::Rotation leftEncoder(3);
+pros::Rotation rightEncoder(12);
+pros::Rotation sideEncoder(18);
 
 void updatePosition(int i)
 {
@@ -45,6 +44,7 @@ void updatePosition(int i)
     curSide = sideEncoder.get_position() / 100;
     curGyro = gyro.get_rotation() * M_PI / 180;
 
+    printf("left: %f right: %f side: %f ", curLeft * (M_PI / 180) * (wheelDiameter / 2), curRight * (M_PI / 180) * (wheelDiameter / 2), curSide * (M_PI / 180) * (wheelDiameter / 2));
     // Calculate the change in encoder values in inches
     deltaLeft = (curLeft - lastLeftPos) * (M_PI / 180) * (wheelDiameter / 2);
     deltaRight = (curRight - lastRightPos) * (M_PI / 180) * (wheelDiameter / 2);
@@ -65,11 +65,10 @@ void updatePosition(int i)
     {
 
         deltaLocalX = 2 * sin(angle / 2) * ((deltaSide / deltaTheta) + Ss);
-        deltaLocalY = 2 * cos(angle / 2) * ((deltaRight / deltaTheta) + Sr);
+        deltaLocalY = 2 * sin(angle / 2) * ((deltaRight / deltaTheta) + Sr);
     }
 
     thetaOffset = (angle - deltaTheta) + (deltaTheta / 2);
-
     // Convert local to polar coordinates
     deltaCoordinateMagnitude = sqrt(deltaLocalX * deltaLocalX + deltaLocalY * deltaLocalY);
     deltaCoordinateAngle = atan2(deltaLocalY, deltaLocalX);
@@ -108,7 +107,7 @@ void updatePosition(int i)
     lastRightPos = curRight;
     lastSidePos = curSide;
     oldGyro = curGyro;
-    // printf("X: %f Y: %f Angle: %f\n", xPos, yPos, angle);
+    printf("X: %f Y: %f Angle: %f\n", xPos, yPos, angle * 180 / 3.141592653);
     // Debug Info
     /*
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));
@@ -128,7 +127,7 @@ void odometry(void *odometryArgs)
 
     // configure encoders
     leftEncoder.set_reversed(false);
-    rightEncoder.set_reversed(true);
+    rightEncoder.set_reversed(false);
     sideEncoder.set_reversed(true);
     int i = 0;
     pros::delay(200);

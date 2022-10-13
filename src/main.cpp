@@ -1,6 +1,7 @@
 #include "main.h"
 #include "autoSelect/selection.h"
 #include <fstream>
+#include <iomanip>
 
 double xPos = 0;
 double yPos = 0;
@@ -8,14 +9,11 @@ double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
-int goal;
+int goal = 3000;
+bool isSpinning = false;
+int counter = 0;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
-pros::IMU gyro(3);
-pros::Rotation leftEncoder(11);
-pros::Rotation rightEncoder(20);
-pros::Rotation sideEncoder(7);
-
 pros::Motor front_right_mtr(11);
 pros::Motor front_left_mtr(20);
 pros::Motor back_right_mtr(10);
@@ -25,8 +23,23 @@ pros::Motor flywheel_mtr(8);
 pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 
-Flywheel flywheel(&flywheel_mtr, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
+Flywheel flywheel(&flywheel_mtr, new VelPID(1, 0.1, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
+std::shared_ptr<OdomChassisController> chassis =
+	ChassisControllerBuilder()
+		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
+		// green gearset, 4 inch wheel diameter, 11.5 inch wheel track
+		// left encoder in ADI ports A & B, right encoder in ADI ports C & D (reversed)
+		.withSensors(okapi::RotationSensor{3}, okapi::RotationSensor{12}, okapi::RotationSensor{18, true})
+		// specify the tracking wheels diameter (2.75 in), track (7 in), and TPR (360)
+		.withOdometry({{2.75_in, 13.8976378_in, 6.4370079_in, 2.75_in}, 360})
+		.buildOdometry();
+
+// std::shared_ptr<okapi::OdomChassisController> chassis =
+// 	okapi::ChassisControllerBuilder()
+// .withSensors(okapi::RotationSensor{3}, okapi::RotationSensor{12}, okapi::RotationSensor{18, true})
+// // specify the tracking wheels diameter (2.75 in), track (7 in), and TPR (360)
+// .buildOdometry();
 
 // Flywheel flywheel(&flywheel_mtr, new VelPID(0, 0, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 
@@ -72,11 +85,11 @@ void autoSelector()
 
 void initialize()
 {
-	pros::Task odometry_task(odometry);
-
 	// selector::init();
 	pros::lcd::initialize();
 	pros::delay(2000);
+	chassis->setState({0_in, 0_in, 0_deg});
+	// pros::Task odometry_task(odometry);
 }
 
 /**
@@ -153,6 +166,11 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+// OdomState getOdomState()
+// {
+// 	return {chassis->getState().x.convert(okapi::inch), chassis->getState().y.convert(okapi::inch), chassis->getState().theta.convert(okapi::degree)};
+// }
 void opcontrol()
 {
 	// pros::delay(5000);
@@ -160,12 +178,12 @@ void opcontrol()
 	double moveSpeed = 0;
 	double rotSpeed = 0;
 
-	leftEncoder.reset();
-	rightEncoder.reset();
-	sideEncoder.reset();
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-	sideEncoder.reset_position();
+	// leftEncoder.reset();
+	// rightEncoder.reset();
+	// sideEncoder.reset();
+	// leftEncoder.reset_position();
+	// rightEncoder.reset_position();
+	// sideEncoder.reset_position();
 
 	xPos = 0;
 	yPos = 0;
@@ -179,10 +197,9 @@ void opcontrol()
 
 	// Shoot is R1
 	// L1 intake forward. L2 backwards
-	goal = 0;
 
 	intake_mtr.move_velocity(130);
-
+	chassis->setState({0_in, 0_in, 0_deg});
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -219,39 +236,47 @@ void opcontrol()
 
 		if (controller.get_digital_new_press(DIGITAL_A))
 		{
-			if (goal)
-			{
-				goal = 0;
-			}
-			else
-			{
-				goal = 3000;
-			}
+			isSpinning = !isSpinning;
 		}
-		if (controller.get_digital_new_press(DIGITAL_B))
-		{
-			if (goal)
-			{
-				goal = 0;
-			}
-			else
-			{
-				goal = 2500;
-			}
-		}
-		flywheel.setTargetRPM(goal);
-		pros::lcd::clear_line(3);
-		pros::lcd::set_text(3, std::to_string(flywheel.getCurrentRPM()));
-		if (controller.get_digital(DIGITAL_UP))
-		{
-			driveTrain.arcade(0, 127, 0);
-		}
-		else
-		{
-			driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
-		}
-		driveTrain.debug();
 
+		if (controller.get_digital_new_press(DIGITAL_UP))
+		{
+			goal += 100;
+		}
+		else if (controller.get_digital_new_press(DIGITAL_DOWN))
+		{
+			goal -= 100;
+		}
+
+		flywheel.setTargetRPM(isSpinning ? goal : 0);
+		if (counter % 60 == 0)
+		{
+			controller.clear_line(1);
+		}
+		if (counter % 30 == 0)
+		{
+			controller.clear_line(0);
+		}
+		if (counter % 15 == 0)
+		{
+			controller.set_text(1, 0, "Goal: " + std::to_string((int)goal));
+		}
+		if (counter % 5 == 0)
+		{
+			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
+		}
+		pros::lcd::clear_line(3);
+
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2) << "X: " << chassis->getState().x.convert(inch) << " Y: " << chassis->getState().y.convert(inch) << " Theta: " << chassis->getState().theta.convert(degree);
+
+		// pros::lcd::set_text(3, "X: " + std::to_string(chassis->getState().x.convert(inch)) + " Y: " + std::to_string(chassis->getState().y.convert(inch)) + " Theta: " + std::to_string(chassis->getState().theta.convert(degree)));
+		pros::lcd::set_text(3, ss.str());
+
+		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
+
+		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);
+		counter++;
 		pros::delay(20);
 	}
 }
