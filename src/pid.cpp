@@ -21,10 +21,13 @@ double PID::calculate(double error)
 
     if (this->Ki != 0)
     {
-        integral += this->error;
-        if (std::signbit(this->error) != std::signbit(this->lastError))
+        if (abs(this->error) < 10)
         {
-            this->integral *= 0.75;
+            this->integral += this->error;
+        }
+        else
+        {
+            this->integral = 0;
         }
     }
     else
