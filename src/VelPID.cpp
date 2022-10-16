@@ -26,8 +26,8 @@ double VelPID::calculate(double targetRPM, double currentRPM)
     lastError = error;
 
     derivative = dFilter->filter(derivative);
+
     output = Kp * error + Ki * integral + Kd * derivative + Kf * targetRPM + KfAddition;
-    // printf("output: %f\n", output);
     if (output > 12000)
     {
         output = 12000;
@@ -36,6 +36,5 @@ double VelPID::calculate(double targetRPM, double currentRPM)
     {
         output = -12000;
     }
-    // printf("%f,%f,%f,%f,%f\n", currentRPM, targetRPM, output, Ki * integral, Kd * derivative);
     return output;
 }
