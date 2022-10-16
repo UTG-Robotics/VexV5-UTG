@@ -25,15 +25,16 @@ pros::Motor indexer_mtr(19);
 
 Flywheel flywheel(&flywheel_mtr, new VelPID(1, 0.1, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
-std::shared_ptr<OdomChassisController> chassis =
-	ChassisControllerBuilder()
-		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
-		// green gearset, 4 inch wheel diameter, 11.5 inch wheel track
-		// left encoder in ADI ports A & B, right encoder in ADI ports C & D (reversed)
-		.withSensors(okapi::RotationSensor{3}, okapi::RotationSensor{12}, okapi::RotationSensor{18, true})
-		// specify the tracking wheels diameter (2.75 in), track (7 in), and TPR (360)
-		.withOdometry({{2.75_in, 13.8976378_in, 6.4370079_in, 2.75_in}, 360})
-		.buildOdometry();
+// std::shared_ptr<OdomChassisController> chassis =
+// 	ChassisControllerBuilder()
+// 		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
+// 		// green gearset, 4 inch wheel diameter, 11.5 inch wheel track
+// 		.withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR})
+// 		// left encoder in ADI ports A & B, right encoder in ADI ports C & D (reversed)
+// 		.withSensors(okapi::RotationSensor{3}, okapi::RotationSensor{12}, okapi::RotationSensor{18, true})
+// 		// specify the tracking wheels diameter (2.75 in), track (7 in), and TPR (360)
+// 		.withOdometry({{2.75_in, 13.8976378_in, 6.4370079_in, 2.75_in}, 360})
+// 		.buildOdometry();
 
 // std::shared_ptr<okapi::OdomChassisController> chassis =
 // 	okapi::ChassisControllerBuilder()
@@ -85,11 +86,10 @@ void autoSelector()
 
 void initialize()
 {
-	// selector::init();
+	selector::init();
 	pros::lcd::initialize();
 	pros::delay(2000);
-	chassis->setState({0_in, 0_in, 0_deg});
-	// pros::Task odometry_task(odometry);
+	pros::Task odometry_task(odometry);
 }
 
 /**
@@ -148,9 +148,16 @@ void autonomous()
 	leftEncoder.reset_position();
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
+	xPos = 0;
+	yPos = 0;
+	angle = 0;
 
-	// selectedAuto = 0;
 	hasAutoStarted = true;
+	printf("Auto Started\n");
+	driveTrain.driveToPoint(0, 24, 0, 100, 2500);
+	driveTrain.rotate(180, 100, 10000);
+	driveTrain.driveToPoint(0, 0, 180, 100, 2500);
+	printf("Auto Ended\n");
 }
 
 /**
@@ -173,8 +180,9 @@ void autonomous()
 // }
 void opcontrol()
 {
+	autonomous();
+
 	// pros::delay(5000);
-	// autonomous();
 	double moveSpeed = 0;
 	double rotSpeed = 0;
 
@@ -184,10 +192,6 @@ void opcontrol()
 	// leftEncoder.reset_position();
 	// rightEncoder.reset_position();
 	// sideEncoder.reset_position();
-
-	xPos = 0;
-	yPos = 0;
-	angle = 0;
 
 	indexer_mtr.set_reversed(true);
 	// arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -199,7 +203,12 @@ void opcontrol()
 	// L1 intake forward. L2 backwards
 
 	intake_mtr.move_velocity(130);
-	chassis->setState({0_in, 0_in, 0_deg});
+	leftEncoder.reset();
+	rightEncoder.reset();
+	sideEncoder.reset();
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	sideEncoder.reset_position();
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -268,9 +277,8 @@ void opcontrol()
 		pros::lcd::clear_line(3);
 
 		std::stringstream ss;
-		ss << std::fixed << std::setprecision(2) << "X: " << chassis->getState().x.convert(inch) << " Y: " << chassis->getState().y.convert(inch) << " Theta: " << chassis->getState().theta.convert(degree);
+		ss << std::fixed << std::setprecision(2) << "X: " << xPos << " Y: " << yPos << " Theta: " << angle * 180 / M_PI;
 
-		// pros::lcd::set_text(3, "X: " + std::to_string(chassis->getState().x.convert(inch)) + " Y: " + std::to_string(chassis->getState().y.convert(inch)) + " Theta: " + std::to_string(chassis->getState().theta.convert(degree)));
 		pros::lcd::set_text(3, ss.str());
 
 		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);

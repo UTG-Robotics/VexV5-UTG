@@ -1,7 +1,7 @@
 #include "main.h"
 // old = 6.55
-float Sl = 6.455, Sr = Sl;  // distance from tracking center to middle of left and right wheel
-float Ss = 5.4;             // distance from tracking center to middle of the tracking wheel
+float Sl = 6.875, Sr = Sl;  // distance from tracking center to middle of left and right wheel
+float Ss = 6.56;            // distance from tracking center to middle of the tracking wheel
 float wheelDiameter = 2.75; // diameter of the wheels being used for tracking
 
 float lastLeftPos = 0;
@@ -22,21 +22,21 @@ float deltaTheta = 0;
 float delta_forward_pos = 0;
 float delta_side_pos = 0;
 
-double deltaLocalX = 0;
-double deltaLocalY = 0;
-double thetaOffset = 0;
-double deltaCoordinateMagnitude = 0;
-double deltaCoordinateAngle = 0;
-
 float deltaX = 0;
 float deltaY = 0;
+
+// pros::Rotation leftEncoder(11);
+// pros::Rotation rightEncoder(20);
+// pros::Rotation sideEncoder(7);
+
+// pros::IMU gyro(3);
 
 pros::IMU gyro(4);
 pros::Rotation leftEncoder(3);
 pros::Rotation rightEncoder(12);
 pros::Rotation sideEncoder(18);
 
-void updatePosition(int i)
+void updatePosition()
 {
     // Save the current encoder/gyro values
     curLeft = leftEncoder.get_position() / 100;
@@ -44,70 +44,46 @@ void updatePosition(int i)
     curSide = sideEncoder.get_position() / 100;
     curGyro = gyro.get_rotation() * M_PI / 180;
 
-    printf("left: %f right: %f side: %f ", curLeft * (M_PI / 180) * (wheelDiameter / 2), curRight * (M_PI / 180) * (wheelDiameter / 2), curSide * (M_PI / 180) * (wheelDiameter / 2));
     // Calculate the change in encoder values in inches
     deltaLeft = (curLeft - lastLeftPos) * (M_PI / 180) * (wheelDiameter / 2);
     deltaRight = (curRight - lastRightPos) * (M_PI / 180) * (wheelDiameter / 2);
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (wheelDiameter / 2);
 
     // Calculate change in rotation by averaging encoders and gyro
-    deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
-    // deltaTheta = (deltaLeft - deltaRight) / (Sl + Sr);
+    deltaTheta = ((curGyro - oldGyro) + (deltaLeft - deltaRight) / (Sl + Sr)) / 2;
 
-    angle += deltaTheta;
+    // Calculate change in forward and sideways position
+    delta_forward_pos = (deltaLeft + deltaRight) / 2;
+    delta_side_pos = deltaSide - Ss * deltaTheta;
 
-    if (deltaTheta == 0)
-    {
-        deltaLocalX = deltaSide;
-        deltaLocalY = deltaRight;
-    }
-    else
-    {
+    // transform forward and side to X and Y
+    deltaX = delta_forward_pos * cos(angle) + delta_side_pos * sin(angle);
+    deltaY = -delta_forward_pos * sin(angle) + delta_side_pos * cos(angle);
 
-        deltaLocalX = 2 * sin(angle / 2) * ((deltaSide / deltaTheta) + Ss);
-        deltaLocalY = 2 * sin(angle / 2) * ((deltaRight / deltaTheta) + Sr);
-    }
-
-    thetaOffset = (angle - deltaTheta) + (deltaTheta / 2);
-    // Convert local to polar coordinates
-    deltaCoordinateMagnitude = sqrt(deltaLocalX * deltaLocalX + deltaLocalY * deltaLocalY);
-    deltaCoordinateAngle = atan2(deltaLocalY, deltaLocalX);
-
-    // Rotate by thetaOffset
-    deltaCoordinateAngle -= thetaOffset;
-
-    // Convert back to cartesian coordinates
-    deltaX = deltaCoordinateMagnitude * cos(deltaCoordinateAngle);
-    deltaY = deltaCoordinateMagnitude * sin(deltaCoordinateAngle);
-
-    // ensure all numbers are real numbers
+    /*
+    ensure all numbers are real numbers
+    in case of invalid sensor data
+    */
     if (deltaTheta != deltaTheta)
-    {
         deltaTheta = 0;
-    }
     if (angle != angle)
-    {
         angle = 0;
-    }
     if (xPos != xPos)
-    {
         xPos = 0;
-    }
     if (yPos != yPos)
-    {
         yPos = 0;
-    }
 
     // Acumulate change in X, Y and Rotation
     xPos += deltaY;
     yPos += deltaX;
+    angle += deltaTheta;
 
     // Store old encoder/gyro values
     lastLeftPos = curLeft;
     lastRightPos = curRight;
     lastSidePos = curSide;
     oldGyro = curGyro;
-    printf("X: %f Y: %f Angle: %f\n", xPos, yPos, angle * 180 / 3.141592653);
+
     // Debug Info
     /*
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));
@@ -129,6 +105,13 @@ void odometry(void *odometryArgs)
     leftEncoder.set_reversed(false);
     rightEncoder.set_reversed(false);
     sideEncoder.set_reversed(true);
+    leftEncoder.reset();
+    rightEncoder.reset();
+    sideEncoder.reset();
+    leftEncoder.reset_position();
+    rightEncoder.reset_position();
+    sideEncoder.reset_position();
+
     int i = 0;
     pros::delay(200);
     while (true)
@@ -139,8 +122,20 @@ void odometry(void *odometryArgs)
             // printf("Gyro not initialized\n");
             continue;
         }
-        updatePosition(i);
+        if (i > 10)
+        {
+            updatePosition(i);
+        }
+        else
+        {
+            i++;
+        }
+        else
+        {
+            xPos = 0;
+            yPos = 0;
+            angle = 0;
+        }
         pros::delay(10);
-        i++;
     }
 }
