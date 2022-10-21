@@ -10,6 +10,8 @@ public:
     void setTargetRPM(double rpm);
     double getTargetRPM();
     double getCurrentRPM();
+    double getAverageRPM();
+    void waitUntilReady();
     bool isShot = false;
     bool isRecovering = false;
 
@@ -19,6 +21,7 @@ private:
     EMAFilter *rpmFilter;
     pros::Task *task;
 
+    double averageRPM = 0;
     int oldTime = 0;
     double targetRPM = 0;
     double currentRPM = 0;

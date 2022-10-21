@@ -16,7 +16,7 @@ Flywheel::Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double ge
 void Flywheel::run()
 {
     int i = 0;
-    int averageLength = 50;
+    int averageLength = 5;
     double averageArray[averageLength] = {};
     while (true)
     {
@@ -69,7 +69,7 @@ void Flywheel::run()
         {
             sum += averageArray[i];
         }
-        double averageRPM = sum / averageLength;
+        this->averageRPM = sum / averageLength;
         // printf("%f,%f,%f\n", output, currentRPM, averageRPM);
         pros::lcd::clear_line(1);
         // PRINTF1, "Average: " + std::to_string(averageRPM));
@@ -98,4 +98,18 @@ double Flywheel::getTargetRPM()
 double Flywheel::getCurrentRPM()
 {
     return currentRPM;
+}
+double Flywheel::getAverageRPM()
+{
+    return averageRPM;
+}
+
+void Flywheel::waitUntilReady()
+{
+    while (abs(averageRPM - targetRPM) > 10 || averageRPM < targetRPM)
+    {
+        pros::delay(20);
+    }
+    return;
+    // return abs(currentRPM - targetRPM) < 5;
 }

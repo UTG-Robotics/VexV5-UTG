@@ -17,10 +17,10 @@ double VelPID::calculate(double targetRPM, double currentRPM)
     {
         integral += error;
     }
-    if (std::signbit(error) != std::signbit(lastError))
-    {
-        integral *= 0.7;
-    }
+    // if (std::signbit(error) != std::signbit(lastError))
+    // {
+    //     integral *= 0.7;
+    // }
 
     derivative = error - lastError;
     lastError = error;
