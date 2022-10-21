@@ -11,6 +11,8 @@ bool hasAutoStarted = false;
 bool isShooting = false;
 int goal = 3000;
 bool isSpinning = false;
+bool isTurretMode = false;
+bool isRollerMode = false;
 int counter = 0;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -22,9 +24,11 @@ pros::Motor back_left_mtr(2);
 pros::Motor flywheel_mtr(8);
 pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
+pros::Motor expansion_mtr(17);
 
 Flywheel flywheel(&flywheel_mtr, new VelPID(1, 0.1, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
+Indexer indexer(&indexer_mtr);
 // std::shared_ptr<OdomChassisController> chassis =
 // 	ChassisControllerBuilder()
 // 		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
@@ -154,9 +158,51 @@ void autonomous()
 
 	hasAutoStarted = true;
 	printf("Auto Started\n");
-	driveTrain.driveToPoint(0, 24, 0, 100, 2500);
-	driveTrain.rotate(180, 100, 10000);
-	driveTrain.driveToPoint(0, 0, 180, 100, 2500);
+	selector::auton = 2;
+	if (selector::auton == 1)
+	{
+		driveTrain.setStartPos(84, 14, 0);
+		// Drive sideways to roller
+		driveTrain.driveToPoint(108, 14, 0, 100, 2500);
+		flywheel.setTargetRPM(2780);
+		// Drive into roller
+		driveTrain.driveToPoint(108, 9, 0, 100, 1000);
+		// Spin roller
+		intake_mtr.move_velocity(-50);
+		pros::delay(500);
+		intake_mtr.move_velocity(0);
+		// Drive back + turn to goal
+		driveTrain.driveToPoint(108, 14, 8.5, 100, 1000);
+		// Take two shots
+		flywheel.waitUntilReady();
+		indexer.shoot();
+		pros::delay(250);
+		flywheel.waitUntilReady();
+		indexer.shoot();
+		pros::delay(1000);
+	}
+
+	else if (selector::auton == 2)
+	{
+		driveTrain.setStartPos(108, 14, 0);
+		flywheel.setTargetRPM(2780);
+		// Drive into roller
+		driveTrain.driveToPoint(106, 8, 0, 100, 1000);
+		// Spin roller
+		intake_mtr.move_velocity(-50);
+		pros::delay(500);
+		intake_mtr.move_velocity(0);
+		// Drive back + turn to goal
+		driveTrain.driveToPoint(106, 14, -6, 100, 1000);
+		// Take two shots
+		flywheel.waitUntilReady();
+		indexer.shoot();
+		pros::delay(250);
+		flywheel.waitUntilReady();
+		indexer.shoot();
+		pros::delay(1000);
+	}
+
 	printf("Auto Ended\n");
 }
 
@@ -180,6 +226,12 @@ void autonomous()
 // }
 void opcontrol()
 {
+	leftEncoder.reset();
+	rightEncoder.reset();
+	sideEncoder.reset();
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	sideEncoder.reset_position();
 	autonomous();
 
 	// pros::delay(5000);
@@ -193,7 +245,6 @@ void opcontrol()
 	// rightEncoder.reset_position();
 	// sideEncoder.reset_position();
 
-	indexer_mtr.set_reversed(true);
 	// arm_mtr_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	// arm_mtr_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	// claw_mtr.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -203,12 +254,6 @@ void opcontrol()
 	// L1 intake forward. L2 backwards
 
 	intake_mtr.move_velocity(130);
-	leftEncoder.reset();
-	rightEncoder.reset();
-	sideEncoder.reset();
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-	sideEncoder.reset_position();
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -218,34 +263,42 @@ void opcontrol()
 
 		if (controller.get_digital_new_press(DIGITAL_R1))
 		{
-			// shoot
-			isShooting = true;
-			indexer_mtr.tare_position();
-			indexer_mtr.move_absolute(100, 200);
+			indexer.shoot();
 		}
-		if (isShooting)
+
+		if (controller.get_digital_new_press(DIGITAL_R2))
 		{
-			if (indexer_mtr.get_position() - 100 > -20)
-			{
-				isShooting = false;
-				indexer_mtr.move_absolute(0, 200);
-			}
+			isRollerMode = !isRollerMode;
 		}
 
 		if (controller.get_digital(DIGITAL_L1))
 		{
 			// spin intake forwards
-			intake_mtr.move_velocity(130);
+			intake_mtr.move_velocity(130 * (isRollerMode ? 0.5 : 1));
 		}
 		else if (controller.get_digital(DIGITAL_L2))
 		{
 			// spin intake backwards
-			intake_mtr.move_velocity(-130);
+			intake_mtr.move_velocity(-130 * (isRollerMode ? 0.5 : 1));
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_X))
+		{
+			isTurretMode = !isTurretMode;
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_A))
 		{
 			isSpinning = !isSpinning;
+		}
+
+		if (controller.get_digital(DIGITAL_Y))
+		{
+			expansion_mtr.move_velocity(40);
+		}
+		else
+		{
+			expansion_mtr.move_velocity(0);
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_UP))
@@ -258,6 +311,14 @@ void opcontrol()
 		}
 
 		flywheel.setTargetRPM(isSpinning ? goal : 0);
+
+		if (isTurretMode)
+		{
+			joystickCh1 /= 5;
+		}
+
+		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
+
 		if (counter % 60 == 0)
 		{
 			controller.clear_line(1);
@@ -274,14 +335,6 @@ void opcontrol()
 		{
 			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
 		}
-		pros::lcd::clear_line(3);
-
-		std::stringstream ss;
-		ss << std::fixed << std::setprecision(2) << "X: " << xPos << " Y: " << yPos << " Theta: " << angle * 180 / M_PI;
-
-		pros::lcd::set_text(3, ss.str());
-
-		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
 
 		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);
 		counter++;
