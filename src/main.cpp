@@ -232,7 +232,7 @@ void opcontrol()
 	leftEncoder.reset_position();
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
-	autonomous();
+	// autonomous();
 
 	// pros::delay(5000);
 	double moveSpeed = 0;
