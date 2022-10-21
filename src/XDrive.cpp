@@ -83,12 +83,12 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
     while (true)
     {
 
-        xDiff = x - xPos;
-        yDiff = y - yPos;
+        xDiff = x - (xPos + this->xPosStart);
+        yDiff = y - (yPos + this->yPosStart);
 
         // Calculate distance between the robot and the point
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
-        errorAngle = targetAngle - angle * 180 / M_PI;
+        errorAngle = targetAngle - (angle * 180 / M_PI + this->angleStart);
 
         speedSpeed = speedPID.calculate(errorSpeed);
         speedAngle = anglePID.calculate(errorAngle);
@@ -97,7 +97,7 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
         speedAngle = std::clamp(speedAngle * 127.0, -speedLimit, speedLimit) / 127.0;
 
         // Calculate angle needed to drive at to go to the point
-        driveAngle = atan2(x - xPos, y - yPos) + angle + M_PI / 2;
+        driveAngle = atan2(x - (xPos + this->xPosStart), y - (yPos + this->yPosStart)) + angle + M_PI / 2;
 
         // Calculate how much to move each set of opposite wheels to move at that angle
         xRatio = -cos(driveAngle + (M_PI / 4));
@@ -150,11 +150,7 @@ void XDrive::rotate(double targetAngle, double maxSpeed, int timeout)
     double speedAngle = 0;
     double finishTimer = 0;
 
-    int startX = xPos;
-    int startY = yPos;
-
     // Initialize PID constants
-
     PID anglePID = PID(0.01, 0.00015, 0.1);
 
     double speedLimit = maxSpeed;
@@ -199,7 +195,10 @@ void XDrive::rotate(double targetAngle, double maxSpeed, int timeout)
     this->FL_mtr->move(0);
     this->BR_mtr->move(0);
     this->BL_mtr->move(0);
-
-    xPos = startX;
-    yPos = startY;
+}
+void XDrive::setStartPos(double x, double y, double angle)
+{
+    this->xPosStart = -x;
+    this->yPosStart = y;
+    this->angleStart = angle;
 }
