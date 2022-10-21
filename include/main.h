@@ -48,6 +48,7 @@
 #include "emaFilter.hpp"
 #include "velPID.hpp"
 #include "flywheel.hpp"
+#include "indexer.hpp"
 #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
