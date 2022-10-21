@@ -1,6 +1,6 @@
 #include "main.h"
 // old = 6.55
-float Sl = 6.875, Sr = Sl;  // distance from tracking center to middle of left and right wheel
+float Sl = 6.77, Sr = Sl;   // distance from tracking center to middle of left and right wheel
 float Ss = 6.56;            // distance from tracking center to middle of the tracking wheel
 float wheelDiameter = 2.75; // diameter of the wheels being used for tracking
 
@@ -50,11 +50,13 @@ void updatePosition()
     deltaSide = (curSide - lastSidePos) * (M_PI / 180) * (wheelDiameter / 2);
 
     // Calculate change in rotation by averaging encoders and gyro
-    deltaTheta = ((curGyro - oldGyro) + (deltaLeft - deltaRight) / (Sl + Sr)) / 2;
+    deltaTheta = ((curGyro - oldGyro) * 0.67 + (deltaLeft - deltaRight) / (Sl + Sr) * 1.33) / 2;
+    // deltaTheta = curGyro - oldGyro;
+    // deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
 
     // Calculate change in forward and sideways position
     delta_forward_pos = (deltaLeft + deltaRight) / 2;
-    delta_side_pos = deltaSide - Ss * deltaTheta;
+    delta_side_pos = deltaSide + Ss * deltaTheta;
 
     // transform forward and side to X and Y
     deltaX = delta_forward_pos * cos(angle) + delta_side_pos * sin(angle);
@@ -85,14 +87,13 @@ void updatePosition()
     oldGyro = curGyro;
 
     // Debug Info
-    /*
+
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));
     pros::lcd::set_text(3, "Left: " + std::to_string(curLeft) + " Right: " + std::to_string(curRight));
     pros::lcd::set_text(4, "Angle: " + std::to_string(angle * 180 / M_PI));
     pros::lcd::set_text(5, "Gyro Angle: " + std::to_string(gyro.get_rotation()));
     pros::lcd::set_text(6, "Old Gyro Angle: " + std::to_string(gyro.get_rotation() - oldGyro));
-    pros::lcd::set_text(7, "deltaTheta: " + std::to_string(deltaTheta));
-    */
+    pros::lcd::set_text(7, "Wheel Distance: " + std::to_string(angle * (Sr + Sl) / (1800 * M_PI / 180)));
 }
 void odometry(void *odometryArgs)
 {
@@ -122,16 +123,14 @@ void odometry(void *odometryArgs)
             // printf("Gyro not initialized\n");
             continue;
         }
+
         if (i > 10)
         {
-            updatePosition(i);
+            updatePosition();
         }
         else
         {
             i++;
-        }
-        else
-        {
             xPos = 0;
             yPos = 0;
             angle = 0;
