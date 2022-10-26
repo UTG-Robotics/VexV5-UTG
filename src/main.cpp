@@ -9,7 +9,7 @@ double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
-int goal = 3000;
+int goal = 2500;
 bool isSpinning = false;
 bool isTurretMode = false;
 bool isRollerMode = false;
@@ -26,7 +26,8 @@ pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 pros::Motor expansion_mtr(17);
 
-Flywheel flywheel(&flywheel_mtr, new VelPID(1, 0.1, 0, 3.95, 242, 0.1), new EMAFilter(0.15), 15, 50);
+VelPID *drivePID = new VelPID(1, 0.1, 0, 3.95, 242, 0.1, false);
+Flywheel flywheel(&flywheel_mtr, drivePID, new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 Indexer indexer(&indexer_mtr);
 // std::shared_ptr<OdomChassisController> chassis =
@@ -91,7 +92,7 @@ void autoSelector()
 void initialize()
 {
 	selector::init();
-	pros::lcd::initialize();
+	// pros::lcd::initialize();
 	pros::delay(2000);
 	pros::Task odometry_task(odometry);
 }
@@ -158,8 +159,10 @@ void autonomous()
 
 	hasAutoStarted = true;
 	printf("Auto Started\n");
-	selector::auton = 2;
-	if (selector::auton == 1)
+	// selector::auton = 2;
+	flywheel.updatePID(new VelPID(1, 0.1, 0, 3.95, 242, 0.1, true));
+	// Right Auto
+	if (selector::auton == 3)
 	{
 		driveTrain.setStartPos(84, 14, 0);
 		// Drive sideways to roller
@@ -181,7 +184,7 @@ void autonomous()
 		indexer.shoot();
 		pros::delay(1000);
 	}
-
+	// Left Auto
 	else if (selector::auton == 2)
 	{
 		driveTrain.setStartPos(108, 14, 0);
@@ -201,6 +204,7 @@ void autonomous()
 		flywheel.waitUntilReady();
 		indexer.shoot();
 		pros::delay(1000);
+		// driveTrain.driveToPoint(96, 24, 0, 100, 3000);
 	}
 
 	printf("Auto Ended\n");
@@ -233,6 +237,7 @@ void opcontrol()
 	rightEncoder.reset_position();
 	sideEncoder.reset_position();
 	// autonomous();
+	flywheel.updatePID(drivePID);
 
 	// pros::delay(5000);
 	double moveSpeed = 0;
