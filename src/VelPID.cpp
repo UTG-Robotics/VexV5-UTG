@@ -1,26 +1,28 @@
 #include "main.h"
 
-VelPID::VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, double alpha)
+VelPID::VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, double alpha, bool isAuto)
 {
     this->Kp = Kp;
     this->Ki = Ki;
     this->Kd = Kd;
     this->Kf = Kf;
     this->KfAddition = KfAddition;
+    this->isAuto = isAuto;
     this->dFilter = new EMAFilter(alpha);
 }
 
 double VelPID::calculate(double targetRPM, double currentRPM)
 {
+
     error = targetRPM - currentRPM;
     if (abs(integral) < 15000)
     {
         integral += error;
     }
-    // if (std::signbit(error) != std::signbit(lastError))
-    // {
-    //     integral *= 0.7;
-    // }
+    if (!isAuto && std::signbit(error) != std::signbit(lastError))
+    {
+        integral *= 0.7;
+    }
 
     derivative = error - lastError;
     lastError = error;

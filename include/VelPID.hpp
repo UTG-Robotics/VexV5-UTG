@@ -4,7 +4,7 @@
 class VelPID
 {
 public:
-    VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, double alpha);
+    VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, double alpha, bool isAuto);
     double calculate(double targetRPM, double currentRPM);
 
 private:
@@ -12,6 +12,7 @@ private:
     double Ki = 0;
     double Kd = 0;
     double Kf = 0;
+    bool isAuto = false;
     double KfAddition = 0;
     double error = 0;
     double integral = 0;
