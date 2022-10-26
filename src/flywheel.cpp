@@ -47,8 +47,8 @@ void Flywheel::run()
             lastShotTime = pros::millis();
             lastShotSpeed = oldRPM;
             isRecovering = true;
-            pros::lcd::clear_line(4);
-            pros::lcd::set_text(4, "Recovering...");
+            // pros::lcd::clear_line(4);
+            // pros::lcd::set_text(4, "Recovering...");
         }
 
         if (isRecovering)
@@ -56,8 +56,8 @@ void Flywheel::run()
             if (currentRPM >= lastShotSpeed || targetRPM != oldTarget)
             {
                 isRecovering = false;
-                pros::lcd::clear_line(4);
-                pros::lcd::set_text(4, "Recovery Time: " + std::to_string((pros::millis() - lastShotTime) / 1000.0));
+                // pros::lcd::clear_line(4);
+                // pros::lcd::set_text(4, "Recovery Time: " + std::to_string((pros::millis() - lastShotTime) / 1000.0));
             }
         }
 
@@ -71,7 +71,7 @@ void Flywheel::run()
         }
         this->averageRPM = sum / averageLength;
         // printf("%f,%f,%f\n", output, currentRPM, averageRPM);
-        pros::lcd::clear_line(1);
+        // pros::lcd::clear_line(1);
         // PRINTF1, "Average: " + std::to_string(averageRPM));
 
         oldRPM = currentRPM;
@@ -112,4 +112,8 @@ void Flywheel::waitUntilReady()
     }
     return;
     // return abs(currentRPM - targetRPM) < 5;
+}
+void Flywheel::updatePID(VelPID *pid)
+{
+    this->pid = pid;
 }

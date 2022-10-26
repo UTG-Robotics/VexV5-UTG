@@ -12,6 +12,7 @@ public:
     double getCurrentRPM();
     double getAverageRPM();
     void waitUntilReady();
+    void updatePID(VelPID *pid);
     bool isShot = false;
     bool isRecovering = false;
 
