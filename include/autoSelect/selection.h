@@ -7,7 +7,7 @@
 #define AUTONS "Do Nothing", \
                "Left WP",    \
                "Right WP"
-#define DEFAULT 3
+#define DEFAULT 1
 
 namespace selector
 {
