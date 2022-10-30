@@ -20,6 +20,7 @@ private:
     pros::Motor *flywheelMotor;
     VelPID *pid;
     EMAFilter *rpmFilter;
+    SMAFilter *smaFilter;
     pros::Task *task;
 
     double averageRPM = 0;
@@ -36,4 +37,17 @@ private:
     int lastShotTime = 0;
     double lastShotSpeed = 0;
     double oldTarget = 0;
+    int currentTime;
+    int currentTicks;
+    int flywheelMotorTimestamp;
+    int prev_flywheelMotorTimestamp;
+    int timestampDiff;
+    uint32_t motorTime;
+    uint32_t now;
+    double internalVelocityMeasure;
+    double realVelocity;
+    int dP;
+    int oldTicks;
+    int systemTime;
+    int rawTicks;
 };

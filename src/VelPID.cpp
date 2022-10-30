@@ -13,15 +13,11 @@ VelPID::VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, do
 
 double VelPID::calculate(double targetRPM, double currentRPM)
 {
-
+    double threshold = 300;
     error = targetRPM - currentRPM;
-    if (abs(integral) < 15000)
+    if (abs(error) < 300)
     {
         integral += error;
-    }
-    if (!isAuto && std::signbit(error) != std::signbit(lastError))
-    {
-        integral *= 0.7;
     }
 
     derivative = error - lastError;
@@ -30,6 +26,16 @@ double VelPID::calculate(double targetRPM, double currentRPM)
     derivative = dFilter->filter(derivative);
 
     output = Kp * error + Ki * integral + Kd * derivative + Kf * targetRPM + KfAddition;
+
+    if (error > threshold)
+    {
+        output = 12000;
+    }
+    else if (error < -threshold)
+    {
+        output = -12000;
+    }
+
     if (output > 12000)
     {
         output = 12000;

@@ -5,40 +5,54 @@ Flywheel::Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double ge
     this->flywheelMotor = motor;
     this->flywheelMotor->set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     this->flywheelMotor->set_reversed(false);
+    // this->flywheelMotor->set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 
     this->pid = pid;
-    this->rpmFilter = filter;
+    this->rpmFilter = new EMAFilter(0.1);
+    this->smaFilter = new SMAFilter(3);
     this->gearRatio = gearRatio;
     this->motorSlew = motorSlew;
     this->task = new pros::Task(this->taskFn, (void *)this);
 }
+
+// void vPortEnterCritical();
+// void vPortExitCritical();
 
 void Flywheel::run()
 {
     int i = 0;
     int averageLength = 5;
     double averageArray[averageLength] = {};
+    now = pros::millis();
+    printf("time,vexVelocity,filteredVelocity");
     while (true)
     {
-        currentRPM = rpmFilter->filter(flywheelMotor->get_actual_velocity() * gearRatio);
-        averageArray[i] = currentRPM;
+        // vPortEnterCritical();
+        this->currentTime = pros::millis();
+        this->currentTicks = flywheelMotor->get_position();
+        // flywheelMotorTimestamp = vexDeviceGetTimestampByIndex(flywheelMotor->get_port());
+        // systemTime = vexSystemTimeGet();
+        this->rawTicks = flywheelMotor->get_raw_position(&this->motorTime);
+        // vPortExitCritical();
+
+        this->timestampDiff = this->motorTime - this->prev_flywheelMotorTimestamp;
+        this->prev_flywheelMotorTimestamp = this->motorTime;
+        this->internalVelocityMeasure = this->flywheelMotor->get_actual_velocity();
+        this->dP = this->currentTicks - this->oldTicks;
+        this->oldTicks = this->currentTicks;
+        this->realVelocity = ((double)this->dP / (double)this->timestampDiff) * 1000;
+
+        currentRPM = this->rpmFilter->filter(this->smaFilter->filter(this->realVelocity));
+
+        // averageArray[i] = currentRPM;
         output = pid->calculate(targetRPM, currentRPM);
 
-        // if (output > lastOutput && lastOutput < 3000 && output > 3000)
-        //     lastOutput = 3000;
-
-        // double change = output - lastOutput;
-        // if (change > motorSlew)
-        //     output = lastOutput + motorSlew;
-        // else if (change < -motorSlew)
-        //     output = lastOutput - motorSlew;
-        // lastOutput = output;
         if (isRecovering && pros::millis() - lastShotTime < 1000)
         {
             // output += 1000;
             // printf("Output: %f Boosting!\n", output);
         }
-        flywheelMotor->move_voltage(output);
+        flywheelMotor->move_voltage(12000);
         // printf("Target: %f Current: %f Output: %f\n", targetRPM, currentRPM, output);
         acceleration = (currentRPM - oldRPM) / ((pros::millis() - oldTime));
         isShot = acceleration <= -3;
@@ -47,8 +61,6 @@ void Flywheel::run()
             lastShotTime = pros::millis();
             lastShotSpeed = oldRPM;
             isRecovering = true;
-            // pros::lcd::clear_line(4);
-            // pros::lcd::set_text(4, "Recovering...");
         }
 
         if (isRecovering)
@@ -56,8 +68,6 @@ void Flywheel::run()
             if (currentRPM >= lastShotSpeed || targetRPM != oldTarget)
             {
                 isRecovering = false;
-                // pros::lcd::clear_line(4);
-                // pros::lcd::set_text(4, "Recovery Time: " + std::to_string((pros::millis() - lastShotTime) / 1000.0));
             }
         }
 
@@ -70,14 +80,14 @@ void Flywheel::run()
             sum += averageArray[i];
         }
         this->averageRPM = sum / averageLength;
-        // printf("%f,%f,%f\n", output, currentRPM, averageRPM);
+        printf("\n%d,%f,%f", pros::millis(), this->internalVelocityMeasure * 15, this->realVelocity);
         // pros::lcd::clear_line(1);
         // PRINTF1, "Average: " + std::to_string(averageRPM));
 
         oldRPM = currentRPM;
         oldTarget = targetRPM;
         oldTime = pros::millis();
-        pros::delay(20);
+        pros::Task::delay_until(&now, 20);
     }
 }
 

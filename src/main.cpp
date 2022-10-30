@@ -10,7 +10,7 @@ int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
 int goal = 2500;
-bool isSpinning = false;
+bool isSpinning = true;
 bool isTurretMode = false;
 bool isRollerMode = false;
 int counter = 0;
@@ -26,7 +26,7 @@ pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 pros::Motor expansion_mtr(17);
 
-VelPID *drivePID = new VelPID(1, 0.1, 0, 3.95, 242, 0.1, false);
+VelPID *drivePID = new VelPID(1, 0, 0, 3.95, 242, 0.1, false);
 Flywheel flywheel(&flywheel_mtr, drivePID, new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 Indexer indexer(&indexer_mtr);
@@ -92,7 +92,7 @@ void autoSelector()
 void initialize()
 {
 	selector::init();
-	// pros::lcd::initialize();
+	pros::lcd::initialize();
 	pros::delay(2000);
 	pros::Task odometry_task(odometry);
 }
@@ -160,7 +160,7 @@ void autonomous()
 	hasAutoStarted = true;
 	printf("Auto Started\n");
 	// selector::auton = 2;
-	flywheel.updatePID(new VelPID(1, 0.1, 0, 3.95, 242, 0.1, true));
+	flywheel.updatePID(new VelPID(1, 0, 0, 3.95, 242, 0.1, true));
 	// Right Auto
 	if (selector::auton == 3)
 	{
@@ -324,22 +324,22 @@ void opcontrol()
 
 		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
 
-		if (counter % 60 == 0)
-		{
-			controller.clear_line(1);
-		}
-		if (counter % 30 == 0)
-		{
-			controller.clear_line(0);
-		}
-		if (counter % 15 == 0)
-		{
-			controller.set_text(1, 0, "Goal: " + std::to_string((int)goal));
-		}
-		if (counter % 5 == 0)
-		{
-			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
-		}
+		// if (counter % 60 == 0)
+		// {
+		// 	controller.clear_line(1);
+		// }
+		// if (counter % 30 == 0)
+		// {
+		// 	controller.clear_line(0);
+		// }
+		// if (counter % 15 == 0)
+		// {
+		// 	controller.set_text(1, 0, "Goal: " + std::to_string((int)goal));
+		// }
+		// if (counter % 5 == 0)
+		// {
+		// 	controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
+		// }
 
 		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);
 		counter++;

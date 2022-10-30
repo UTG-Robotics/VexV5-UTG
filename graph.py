@@ -12,7 +12,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-update-graph'),
         dcc.Interval(
             id='interval-component',
-            interval=500, # in milliseconds
+            interval=5000000, # in milliseconds
             n_intervals=0
         )
     ])
@@ -21,8 +21,8 @@ app.layout = html.Div(
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n):
-    df = pandas.read_csv('test.csv')
-    plot = px.scatter(df, x="X", y=["Y", "theta"], height=800)
+    df = pandas.read_csv('data.csv', skiprows=19)
+    plot = px.scatter(df, x="time", y=["filteredVelocity"], height=800)
     # plot.uirevision = True
     return plot
 
