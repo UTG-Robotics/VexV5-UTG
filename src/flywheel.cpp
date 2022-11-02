@@ -9,6 +9,8 @@ Flywheel::Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double ge
 
     this->pid = pid;
     this->rpmFilter = new EMAFilter(0.1);
+    this->accelEMAFilter = new EMAFilter(0.1);
+    this->accelFilter = new SMAFilter(3);
     this->smaFilter = new SMAFilter(3);
     this->gearRatio = gearRatio;
     this->motorSlew = motorSlew;
@@ -24,28 +26,37 @@ void Flywheel::run()
     int averageLength = 5;
     double averageArray[averageLength] = {};
     now = pros::millis();
-    printf("time,vexVelocity,filteredVelocity");
+    printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain");
     while (true)
     {
-        // vPortEnterCritical();
         this->currentTime = pros::millis();
         this->currentTicks = flywheelMotor->get_position();
-        // flywheelMotorTimestamp = vexDeviceGetTimestampByIndex(flywheelMotor->get_port());
-        // systemTime = vexSystemTimeGet();
         this->rawTicks = flywheelMotor->get_raw_position(&this->motorTime);
-        // vPortExitCritical();
 
         this->timestampDiff = this->motorTime - this->prev_flywheelMotorTimestamp;
+        // Round timestampDiff to nearest 5ms
+        this->timestampDiff = floor((this->timestampDiff + 3) / 5) * 5;
+
         this->prev_flywheelMotorTimestamp = this->motorTime;
         this->internalVelocityMeasure = this->flywheelMotor->get_actual_velocity();
         this->dP = this->currentTicks - this->oldTicks;
         this->oldTicks = this->currentTicks;
         this->realVelocity = ((double)this->dP / (double)this->timestampDiff) * 1000;
 
-        currentRPM = this->rpmFilter->filter(this->smaFilter->filter(this->realVelocity));
+        this->currentRPM = this->rpmFilter->filter(this->smaFilter->filter(this->realVelocity));
+        this->currentTime = pros::millis();
 
-        // averageArray[i] = currentRPM;
-        output = pid->calculate(targetRPM, currentRPM);
+        this->currentAccel = (this->currentRPM - this->lastRPM) / (this->currentTime - this->prevTime);
+        // scale acceleration to ema between 0.1 and 0.3
+        this->rpmFilter->setGains(0.1 + (0.15 * (this->currentAccel)));
+        this->filteredAccel = this->accelEMAFilter->filter(this->currentAccel);
+        // this->filteredAccel = this->accelEMAFilter->filter(this->accelFilter->filter(this->currentAccel));
+
+        this->lastRPM = this->currentRPM;
+        this->prevTime = this->currentTime;
+
+        // averageArray[i] = this->currentRPM;
+        output = pid->calculate(targetRPM, this->currentRPM);
 
         if (isRecovering && pros::millis() - lastShotTime < 1000)
         {
@@ -53,8 +64,8 @@ void Flywheel::run()
             // printf("Output: %f Boosting!\n", output);
         }
         flywheelMotor->move_voltage(12000);
-        // printf("Target: %f Current: %f Output: %f\n", targetRPM, currentRPM, output);
-        acceleration = (currentRPM - oldRPM) / ((pros::millis() - oldTime));
+        // printf("Target: %f Current: %f Output: %f\n", targetRPM, this->currentRPM, output);
+        acceleration = (this->currentRPM - oldRPM) / ((pros::millis() - oldTime));
         isShot = acceleration <= -3;
         if (isShot && !isRecovering)
         {
@@ -65,7 +76,7 @@ void Flywheel::run()
 
         if (isRecovering)
         {
-            if (currentRPM >= lastShotSpeed || targetRPM != oldTarget)
+            if (this->currentRPM >= lastShotSpeed || targetRPM != oldTarget)
             {
                 isRecovering = false;
             }
@@ -80,14 +91,15 @@ void Flywheel::run()
             sum += averageArray[i];
         }
         this->averageRPM = sum / averageLength;
-        printf("\n%d,%f,%f", pros::millis(), this->internalVelocityMeasure * 15, this->realVelocity);
+        printf("\n%d,%f,%f,%f,%f,%f", pros::millis(), this->internalVelocityMeasure * 15, this->currentRPM, this->realVelocity, this->filteredAccel, 0.1 + (0.15 * (this->currentAccel)));
         // pros::lcd::clear_line(1);
         // PRINTF1, "Average: " + std::to_string(averageRPM));
 
-        oldRPM = currentRPM;
+        oldRPM = this->currentRPM;
         oldTarget = targetRPM;
         oldTime = pros::millis();
-        pros::Task::delay_until(&now, 20);
+        // pros::Task::delay_until(&now, 20);
+        pros::delay(20);
     }
 }
 
@@ -107,7 +119,7 @@ double Flywheel::getTargetRPM()
 }
 double Flywheel::getCurrentRPM()
 {
-    return currentRPM;
+    return this->currentRPM;
 }
 double Flywheel::getAverageRPM()
 {
@@ -121,7 +133,7 @@ void Flywheel::waitUntilReady()
         pros::delay(20);
     }
     return;
-    // return abs(currentRPM - targetRPM) < 5;
+    // return abs(this->currentRPM - targetRPM) < 5;
 }
 void Flywheel::updatePID(VelPID *pid)
 {

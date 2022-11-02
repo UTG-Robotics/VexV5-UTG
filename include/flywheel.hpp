@@ -20,6 +20,8 @@ private:
     pros::Motor *flywheelMotor;
     VelPID *pid;
     EMAFilter *rpmFilter;
+    EMAFilter *accelEMAFilter;
+    SMAFilter *accelFilter;
     SMAFilter *smaFilter;
     pros::Task *task;
 
@@ -50,4 +52,8 @@ private:
     int oldTicks;
     int systemTime;
     int rawTicks;
+    int prevTime;
+    double lastRPM;
+    double currentAccel;
+    double filteredAccel;
 };

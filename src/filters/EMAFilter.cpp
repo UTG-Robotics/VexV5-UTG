@@ -7,8 +7,8 @@ EMAFilter::EMAFilter(double alpha)
 
 double EMAFilter::filter(double input)
 {
-    output = alpha * input + (1.0 - alpha) * lastOutput;
-    lastOutput = output;
+    output = this->alpha * input + (1.0 - this->alpha) * this->lastOutput;
+    this->lastOutput = output;
     return output;
 }
 
