@@ -13,7 +13,7 @@ VelPID::VelPID(double Kp, double Ki, double Kd, double Kf, double KfAddition, do
 
 double VelPID::calculate(double targetRPM, double currentRPM)
 {
-    double threshold = 300;
+    double threshold = 100;
     error = targetRPM - currentRPM;
     if (abs(error) < 300)
     {
@@ -31,7 +31,7 @@ double VelPID::calculate(double targetRPM, double currentRPM)
     {
         output = 12000;
     }
-    else if (error < -threshold)
+    else if (error < -threshold * 2)
     {
         output = -12000;
     }

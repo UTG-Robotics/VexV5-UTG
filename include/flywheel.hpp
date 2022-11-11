@@ -53,6 +53,8 @@ private:
     int systemTime;
     int rawTicks;
     int prevTime;
+    int vexTimestampDiff;
+    int prevVexTime;
     double lastRPM;
     double currentAccel;
     double filteredAccel;

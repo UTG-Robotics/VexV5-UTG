@@ -22,7 +22,21 @@ app.layout = html.Div(
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n):
     df = pandas.read_csv('data.csv', skiprows=19)
-    plot = px.scatter(df, x="time", y=["filteredVelocity"], height=800)
+    df["acceleration"] *= 1000
+    plot = px.scatter( df,
+    x="time",
+    y=[
+        "filteredVelocity",
+        "vexVelocity",
+        # "rawVelocity",
+        # "voltageOut"
+        # "acceleration",
+        # "emaGain",
+        # "deltaTime",
+        # "vexDeltaTime",
+        # "deltaTicks",
+    ],
+     height=800)
     # plot.uirevision = True
     return plot
 
