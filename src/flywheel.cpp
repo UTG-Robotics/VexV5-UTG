@@ -26,7 +26,7 @@ void Flywheel::run()
     int averageLength = 5;
     double averageArray[averageLength] = {};
     now = pros::millis();
-    printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain,voltageOut,deltaTime,vexDeltaTime,deltaTicks");
+    // printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain,voltageOut,deltaTime,vexDeltaTime,deltaTicks");
     while (true)
     {
         this->currentTime = pros::millis();
@@ -42,6 +42,11 @@ void Flywheel::run()
         if (abs(this->timestampDiff - this->vexTimestampDiff) > 10)
         {
             this->timestampDiff = this->vexTimestampDiff;
+        }
+        if (timestampDiff == 0)
+        {
+            pros::delay(20);
+            continue;
         }
         this->prev_flywheelMotorTimestamp = this->motorTime;
         this->internalVelocityMeasure = this->flywheelMotor->get_actual_velocity();
@@ -59,14 +64,14 @@ void Flywheel::run()
             this->prevTime = this->currentTime;
             continue;
         }
-        // this->rpmFilter->setGains(std::min(1.0, 0.15 + abs(0.15 * this->currentAccel)));
+        this->rpmFilter->setGains(std::min(1.0, 0.15 + abs(0.15 * this->currentAccel)));
 
         this->lastRPM = this->currentRPM;
         this->prevTime = this->currentTime;
 
         // averageArray[i] = this->currentRPM;
         output = pid->calculate(targetRPM, this->currentRPM);
-        output = 12000;
+        // output = 12000;
 
         if (isRecovering && pros::millis() - lastShotTime < 1000)
         {
@@ -101,7 +106,7 @@ void Flywheel::run()
             sum += averageArray[i];
         }
         this->averageRPM = sum / averageLength;
-        printf("\n%d,%f,%f,%f,%f,%f,%f,%d,%d,%d", pros::millis(), this->internalVelocityMeasure * 15, this->currentRPM, this->realVelocity, this->currentAccel, std::min(1.0, 0.15 + abs(0.15 * this->currentAccel)), output, this->timestampDiff, this->vexTimestampDiff, this->dP);
+        // printf("\n%d,%f,%f,%f,%f,%f,%f,%d,%d,%d", pros::millis(), this->internalVelocityMeasure * 15, this->currentRPM, this->realVelocity, this->currentAccel, std::min(1.0, 0.15 + abs(0.15 * this->currentAccel)), output, this->timestampDiff, this->vexTimestampDiff, this->dP);
         // pros::lcd::clear_line(1);
         // PRINTF1, "Average: " + std::to_string(averageRPM));
 
