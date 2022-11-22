@@ -13,6 +13,7 @@ int goal = 2500;
 bool isSpinning = true;
 bool isTurretMode = false;
 bool isRollerMode = false;
+bool isForward = false;
 int counter = 0;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -30,6 +31,7 @@ VelPID *drivePID = new VelPID(0, 0, 0, 3.6424, 1327, 0.1, false);
 Flywheel flywheel(&flywheel_mtr, drivePID, new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 Indexer indexer(&indexer_mtr);
+Piston expansion(1);
 // std::shared_ptr<OdomChassisController> chassis =
 // 	ChassisControllerBuilder()
 // 		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
@@ -305,6 +307,11 @@ void opcontrol()
 			isSpinning = !isSpinning;
 		}
 
+		if (controller.get_digital_new_press(DIGITAL_B))
+		{
+			isForward = !isForward;
+		}
+
 		if (controller.get_digital(DIGITAL_Y))
 		{
 			expansion_mtr.move_velocity(40);
@@ -312,6 +319,11 @@ void opcontrol()
 		else
 		{
 			expansion_mtr.move_velocity(0);
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_B))
+		{
+			isForward = !isForward;
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_UP))
@@ -323,6 +335,11 @@ void opcontrol()
 			goal -= 100;
 		}
 
+		if (controller.get_digital_new_press(DIGITAL_RIGHT))
+		{
+			expansion.toggle();
+		}
+
 		flywheel.setTargetRPM(isSpinning ? goal : 0);
 
 		if (isTurretMode)
@@ -330,7 +347,7 @@ void opcontrol()
 			joystickCh1 /= 5;
 		}
 
-		driveTrain.arcade(joystickCh4, joystickCh3, joystickCh1);
+		driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
 
 		if (counter % 60 == 0)
 		{
@@ -350,6 +367,7 @@ void opcontrol()
 		}
 
 		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);
+
 		counter++;
 		pros::delay(20);
 	}
