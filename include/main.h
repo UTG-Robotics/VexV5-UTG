@@ -50,6 +50,7 @@
 #include "velPID.hpp"
 #include "flywheel.hpp"
 #include "indexer.hpp"
+#include "piston.hpp"
 #include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 
