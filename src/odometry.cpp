@@ -33,9 +33,6 @@ double delta_side_pos = 0;
 double deltaX = 0;
 double deltaY = 0;
 
-double posX = 0;
-double posY = 0;
-
 // pros::Rotation leftEncoder(11);
 // pros::Rotation rightEncoder(20);
 // pros::Rotation sideEncoder(7);
@@ -43,12 +40,9 @@ double posY = 0;
 // pros::IMU gyro(3);
 
 pros::IMU gyro(4);
-// pros::Rotation leftEncoder(12);
-// pros::Rotation rightEncoder(3);
-// pros::Rotation sideEncoder(18);
 
 pros::Rotation leftEncoder(12);
-pros::Rotation rightEncoder(1);
+pros::Rotation rightEncoder(3);
 pros::Rotation sideEncoder(18);
 
 void updatePosition()
@@ -68,12 +62,13 @@ void updatePosition()
     // Calculate change in rotation by averaging encoders and gyro
     // deltaTheta = ((curGyro - oldGyro) * 0.67 + (deltaLeft - deltaRight) / (Sl + Sr) * 1.33) / 2;
 
-    // deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
-    // angle += deltaTheta;
+    deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
+    angle += -deltaTheta;
 
-    angle = curGyro;
-    deltaTheta = -(angle - oldGyro);
+    // angle = curGyro;
+    // deltaTheta = -(angle - oldGyro);
 
+    // printf("\nGyro: %f, Angle: %f, angle: %f, gyro: %f", -(curGyro - oldGyro), deltaTheta, angle, curGyro);
     // Store old encoder/gyro values
     lastLeftPos = curLeft;
     lastRightPos = curRight;
@@ -83,28 +78,21 @@ void updatePosition()
     // Calculate change in forward and sideways position
     if (deltaTheta)
     {
+        // Calculate local position offsets
         localX = (deltaTheta + (deltaSide / Ss)) * Ss;
         localY = (deltaLeft + deltaRight) / 2;
-
+        // Convert local offsets to global offsets
         globalX = localY * sin(angle - deltaTheta / 2) + localX * cos(angle - deltaTheta / 2);
         globalY = localY * cos(angle - deltaTheta / 2) - localX * sin(angle - deltaTheta / 2);
-
         // Acumulate change in X, Y and Rotation
-        posX += globalX;
-        posY += globalY;
+        xPos += globalX;
+        yPos += globalY;
     }
     else
     {
-        posX += deltaSide;
-        posY += deltaRight;
-        // localX = deltaRight;
-        // localY = deltaSide;
+        xPos += deltaSide;
+        yPos += deltaRight;
     }
-    // double p = angle - deltaTheta / 2.0; // global angle
-
-    // convert to absolute displacement
-    // xPos += cos(p) * localX - sin(p) * localY;
-    // yPos += cos(p) * localY + sin(p) * localX;
     /*
     ensure all numbers are real numbers
     in case of invalid sensor data
@@ -118,9 +106,9 @@ void updatePosition()
     if (yPos != yPos)
         yPos = 0;
 
-    printf("\n%f,%f,%f", posX, posY, angle);
     // Debug Info
-
+    // printf("\n%f,%f,%f,%f,%f", xPos, yPos, angle, deltaTheta, deltaSide);
+    // printf("\n%f,%f,%f", xPos, yPos, angle);
     pros::lcd::set_text(2, "X: " + std::to_string(xPos) + " Y: " + std::to_string(yPos));
     pros::lcd::set_text(3, "Left: " + std::to_string(curLeft) + " Right: " + std::to_string(curRight));
     pros::lcd::set_text(4, "Angle: " + std::to_string(angle * 180 / M_PI));
@@ -140,9 +128,6 @@ void odometry(void *odometryArgs)
     rightEncoder.set_reversed(false);
     sideEncoder.set_reversed(false);
 
-    leftEncoder.reset();
-    rightEncoder.reset();
-    sideEncoder.reset();
     leftEncoder.reset_position();
     rightEncoder.reset_position();
     sideEncoder.reset_position();
