@@ -76,9 +76,12 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
     int startTime = pros::millis();
 
     // Initialize PID constants
-    PID speedPID = PID(0.09, 0.00015, 0.5);
-    PID anglePID = PID(0.01, 0, 0);
 
+    PID speedPID = PID(0.13, 0.001, 0.4, 5);
+    PID anglePID = PID(0.015, 0.001, 0.005, 5);
+    // PID speedPID = PID(0, 0, 0, 0);
+    // PID anglePID = PID(0, 0, 0, 0);
+    printf("time,error,output,xPow,yPow");
     while (true)
     {
 
@@ -89,20 +92,20 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
         errorSpeed = sqrt(xDiff * xDiff + yDiff * yDiff);
         errorAngle = targetAngle - (angle * 180 / M_PI + this->angleStart);
 
-        speedSpeed = speedPID.calculate(errorSpeed);
-        speedAngle = anglePID.calculate(errorAngle);
+        speedSpeed = slew(speedSpeed, speedPID.calculate(errorSpeed), 0.05);
+        speedAngle = slew(speedAngle, anglePID.calculate(errorAngle), 0.05);
 
         speedSpeed = std::clamp(speedSpeed * 127.0, -speedLimit, speedLimit) / 127.0;
         speedAngle = std::clamp(speedAngle * 127.0, -speedLimit, speedLimit) / 127.0;
 
         // Calculate angle needed to drive at to go to the point
-        driveAngle = 2 * M_PI - (atan2(x - (xPos + this->xPosStart), y - (yPos + this->yPosStart)) + angle - M_PI / 2);
+        driveAngle = 2 * M_PI - (atan2(x - (xPos + this->xPosStart), y - (yPos + this->yPosStart)) - angle - M_PI / 2);
         // printf("\ndriveAngle: %f", driveAngle * 180 / M_PI);
         // Calculate how much to move each set of opposite wheels to move at that angle
         xRatio = -cos(driveAngle + (M_PI / 4));
         yRatio = sin(driveAngle + (M_PI / 4));
 
-        printf("\ndriveAngle: %f", std::fmod(driveAngle * 180 / M_PI, 360));
+        // printf("\ndriveAngle: %f", std::fmod(driveAngle * 180 / M_PI, 360));
         // printf("\nxRatio: %f yRatio: %f", xRatio, yRatio);
 
         // Normalize values to maximum of 1
@@ -117,8 +120,9 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
         this->BL_mtr->move(xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
 
         isWithinRange = (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5);
-
         // If the error is within an acceptable margin or timeout is over, start timer
+        printf("\n%d,%f,%f,%f,%f", pros::millis(), errorSpeed, speedSpeed, xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127), yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
+        // printf("\n%d,%f,%f", pros::millis(), errorAngle, speedAngle);
         if ((isWithinRange || (pros::millis() - startTime) > timeout))
         {
             finishTimer += 1;
@@ -198,9 +202,9 @@ void XDrive::rotate(double targetAngle, double maxSpeed, int timeout)
     this->BR_mtr->move(0);
     this->BL_mtr->move(0);
 }
-void XDrive::setStartPos(double x, double y, double angle)
+void XDrive::setStartPos(double _x, double _y, double _angle)
 {
-    this->xPosStart = -x;
-    this->yPosStart = y;
-    this->angleStart = angle;
+    xPos = _x;
+    yPos = _y;
+    angle = _angle;
 }

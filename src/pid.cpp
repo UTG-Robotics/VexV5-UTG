@@ -1,10 +1,11 @@
 #include "main.h"
 
-PID::PID(double _Kp, double _Ki, double _Kd)
+PID::PID(double _Kp, double _Ki, double _Kd, double _KiStart)
 {
     this->Kp = _Kp;
     this->Ki = _Ki;
     this->Kd = _Kd;
+    this->KiStart = _KiStart;
 }
 
 void PID::clear()
@@ -21,7 +22,7 @@ double PID::calculate(double error)
 
     if (this->Ki != 0)
     {
-        if (abs(this->error) < 10)
+        if (abs(this->error) < this->KiStart && abs(this->error) > 0.1)
         {
             this->integral += this->error;
         }
