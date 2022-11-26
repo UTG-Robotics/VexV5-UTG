@@ -78,21 +78,24 @@ void updatePosition()
     // Calculate change in forward and sideways position
     if (deltaTheta)
     {
+        double i = 2 * sin(angle / 2);
         // Calculate local position offsets
-        localX = (deltaTheta + (deltaSide / Ss)) * Ss;
-        localY = (deltaLeft + deltaRight) / 2;
-        // Convert local offsets to global offsets
-        globalX = localY * sin(angle - deltaTheta / 2) + localX * cos(angle - deltaTheta / 2);
-        globalY = localY * cos(angle - deltaTheta / 2) - localX * sin(angle - deltaTheta / 2);
-        // Acumulate change in X, Y and Rotation
-        xPos += globalX;
-        yPos += globalY;
+        localX = i * (deltaSide / deltaTheta + Ss);
+        localY = i * (deltaRight / deltaTheta + Sr);
     }
     else
     {
-        xPos += deltaSide * cos(angle - deltaTheta / 2) + deltaRight * sin(angle - deltaTheta / 2);
-        yPos += deltaRight * cos(angle - deltaTheta / 2) - deltaSide * sin(angle - deltaTheta / 2);
+        localX = deltaSide;
+        localY = deltaRight;
     }
+
+    // local position to polar
+    double r = sqrt(pow(localX, 2) + pow(localY, 2));
+    double theta = atan2(localY, localX) - angle + deltaTheta / 2;
+
+    // polar to global position
+    xPos += r * cos(theta);
+    yPos += r * sin(theta);
     /*
     ensure all numbers are real numbers
     in case of invalid sensor data
