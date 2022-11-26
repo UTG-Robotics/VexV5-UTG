@@ -2,7 +2,7 @@
 // old = 6.55
 double Sl = 6.77, Sr = Sl; // distance from tracking center to middle of left and right wheel
 
-double Ss = 6.56; // distance from tracking center to middle of the tracking wheel
+double Ss = 6.3125; // distance from tracking center to middle of the tracking wheel
 // double Ss = 1.56;            // distance from tracking center to middle of the tracking wheel
 double wheelDiameter = 2.75; // diameter of the wheels being used for tracking
 
@@ -62,11 +62,11 @@ void updatePosition()
     // Calculate change in rotation by averaging encoders and gyro
     // deltaTheta = ((curGyro - oldGyro) * 0.67 + (deltaLeft - deltaRight) / (Sl + Sr) * 1.33) / 2;
 
-    deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
-    angle += -deltaTheta;
+    // deltaTheta = ((deltaLeft - deltaRight) / (Sl + Sr));
+    // angle += -deltaTheta;
 
-    // angle = curGyro;
-    // deltaTheta = -(angle - oldGyro);
+    angle = curGyro;
+    deltaTheta = -(angle - oldGyro);
 
     // printf("\nGyro: %f, Angle: %f, angle: %f, gyro: %f", -(curGyro - oldGyro), deltaTheta, angle, curGyro);
     // Store old encoder/gyro values
@@ -90,8 +90,8 @@ void updatePosition()
     }
     else
     {
-        xPos += deltaSide;
-        yPos += deltaRight;
+        xPos += deltaSide * cos(angle - deltaTheta / 2) + deltaRight * sin(angle - deltaTheta / 2);
+        yPos += deltaRight * cos(angle - deltaTheta / 2) - deltaSide * sin(angle - deltaTheta / 2);
     }
     /*
     ensure all numbers are real numbers
@@ -119,9 +119,9 @@ void updatePosition()
 void odometry(void *odometryArgs)
 {
     // zero position
-    xPos = 0;
-    yPos = 0;
-    angle = 0;
+    // xPos = 0;
+    // yPos = 0;
+    // angle = 0;
 
     // configure encoders
     leftEncoder.set_reversed(false);
@@ -143,18 +143,7 @@ void odometry(void *odometryArgs)
             // printf("Gyro not initialized\n");
             continue;
         }
-
-        if (i > 10)
-        {
-            updatePosition();
-        }
-        else
-        {
-            i++;
-            xPos = 0;
-            yPos = 0;
-            angle = 0;
-        }
+        updatePosition();
         pros::delay(10);
     }
 }

@@ -32,6 +32,8 @@ Flywheel flywheel(&flywheel_mtr, drivePID, new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 Indexer indexer(&indexer_mtr);
 Piston expansion(1);
+PID autoAimPID = PID(0.015, 0.001, 0.005, 5);
+
 // std::shared_ptr<OdomChassisController> chassis =
 // 	ChassisControllerBuilder()
 // 		.withMotors(6, 6) // left motor is 1, right motor is 2 (reversed)
@@ -96,7 +98,17 @@ void initialize()
 	selector::init();
 	pros::lcd::initialize();
 	pros::delay(2000);
+	// gyro.reset();
 	pros::Task odometry_task(odometry);
+	leftEncoder.reset();
+	rightEncoder.reset();
+	sideEncoder.reset();
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	sideEncoder.reset_position();
+	xPos = 0;
+	yPos = 0;
+	angle = 0;
 }
 
 /**
@@ -149,18 +161,9 @@ the odometry, and the tracking,
 */
 void autonomous()
 {
-	leftEncoder.reset();
-	rightEncoder.reset();
-	sideEncoder.reset();
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-	sideEncoder.reset_position();
-	xPos = 0;
-	yPos = 0;
-	angle = 0;
-
 	hasAutoStarted = true;
 	printf("Auto Started\n");
+
 	// selector::auton = 2;
 	flywheel.updatePID(drivePID);
 	// Right Auto
@@ -232,12 +235,12 @@ void autonomous()
 // }
 void opcontrol()
 {
-	leftEncoder.reset();
-	rightEncoder.reset();
-	sideEncoder.reset();
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-	sideEncoder.reset_position();
+	// leftEncoder.reset();
+	// rightEncoder.reset();
+	// sideEncoder.reset();
+	// leftEncoder.reset_position();
+	// rightEncoder.reset_position();
+	// sideEncoder.reset_position();
 	// autonomous();
 	flywheel.updatePID(drivePID);
 
@@ -268,6 +271,16 @@ void opcontrol()
 	// Shoot is R1
 	// L1 intake forward. L2 backwards
 
+	// driveTrain.driveToPoint(-12, -12, 90, 127, 2500000);
+	// driveTrain.setStartPos(80.25, 14.75, 0);
+	driveTrain.setStartPos(0, 0, 0);
+	// xPos = 80.25;
+	// yPos = 14.75;
+	// angle = 0;
+	xPos = 0;
+	yPos = 0;
+	angle = 0;
+
 	intake_mtr.move_velocity(130);
 	while (true)
 	{
@@ -289,12 +302,12 @@ void opcontrol()
 		if (controller.get_digital(DIGITAL_L1))
 		{
 			// spin intake forwards
-			intake_mtr.move_velocity(130 * (isRollerMode ? 0.5 : 1));
+			intake_mtr.move_velocity(200 * (isRollerMode ? 0.5 : 1));
 		}
 		else if (controller.get_digital(DIGITAL_L2))
 		{
 			// spin intake backwards
-			intake_mtr.move_velocity(-130 * (isRollerMode ? 0.5 : 1));
+			intake_mtr.move_velocity(-200 * (isRollerMode ? 0.5 : 1));
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_X))
@@ -347,7 +360,12 @@ void opcontrol()
 			joystickCh1 /= 5;
 		}
 
+		double target = atan2(xPos - 19, yPos - 19) * 180 / M_PI - 180;
+		printf("\n%f,%f,%f,%f", target, xPos, yPos, angle);
 		driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
+		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
+
+		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
 
 		if (counter % 60 == 0)
 		{
