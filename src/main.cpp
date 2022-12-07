@@ -288,7 +288,7 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
-	intake_mtr.move_velocity(130);
+	intake_mtr.move_velocity(200);
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
