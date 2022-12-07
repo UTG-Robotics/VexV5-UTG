@@ -9,7 +9,7 @@ double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
-int goal = 2500;
+int goal = 2300;
 bool isSpinning = true;
 bool isTurretMode = false;
 bool isRollerMode = false;
@@ -22,13 +22,17 @@ pros::Motor front_left_mtr(20);
 pros::Motor back_right_mtr(10);
 pros::Motor back_left_mtr(2);
 
-pros::Motor flywheel_mtr(8);
+// pros::Motor flywheel_mtr(8);
+// pros::Motor flywheel_mtr_two(7);
 pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 pros::Motor expansion_mtr(17);
 
-VelPID *drivePID = new VelPID(0, 0, 0, 3.6424, 1327, 0.1, false);
-Flywheel flywheel(&flywheel_mtr, drivePID, new EMAFilter(0.15), 15, 50);
+auto flywheel_motor = sylib::Motor(8, 3000, false);
+auto flywheel_motor_two = sylib::Motor(7, 3000, true);
+// 3.5417x+1086
+VelPID *drivePID = new VelPID(5, 0, 0, 3.5417, 1086, 0.1, false);
+Flywheel flywheel(&flywheel_motor, &flywheel_motor_two, drivePID, new EMAFilter(0.15), 15, 50);
 XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 Indexer indexer(&indexer_mtr);
 Piston expansion(1);
@@ -95,6 +99,7 @@ void autoSelector()
 
 void initialize()
 {
+	sylib::initialize();
 	selector::init();
 	pros::lcd::initialize();
 	pros::delay(2000);
@@ -161,11 +166,12 @@ the odometry, and the tracking,
 */
 void autonomous()
 {
+	/*
 	hasAutoStarted = true;
 	printf("Auto Started\n");
 
 	// selector::auton = 2;
-	flywheel.updatePID(drivePID);
+	// flywheel.updatePID(drivePID);
 	// Right Auto
 	if (selector::auton == 3)
 	{
@@ -213,6 +219,7 @@ void autonomous()
 	}
 
 	printf("Auto Ended\n");
+	*/
 }
 
 /**
@@ -242,14 +249,14 @@ void opcontrol()
 	// rightEncoder.reset_position();
 	// sideEncoder.reset_position();
 	// autonomous();
-	flywheel.updatePID(drivePID);
+	// flywheel.updatePID(drivePID);
 
 	// while (goal <= 13000)
 	// {
 	// 	flywheel.setTargetRPM(goal);
-	// 	pros::delay(10000);
-	// 	printf("\nKv: %d|%f", goal, flywheel.getCurrentRPM());
-	// 	// goal += 1000;
+	// 	pros::delay(5000);
+	// 	printf("\nKv: %d|%f,%f", goal, flywheel_motor.get_velocity(), flywheel_motor_two.get_velocity());
+	// 	goal += 1000;
 	// }
 
 	// pros::delay(5000);
@@ -289,7 +296,7 @@ void opcontrol()
 		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
 		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X) / 127.0 * 200.0;
 
-		if (controller.get_digital_new_press(DIGITAL_R1))
+		if (controller.get_digital(DIGITAL_R1) && flywheel.IsAtTarget())
 		{
 			indexer.shoot();
 		}
@@ -354,6 +361,8 @@ void opcontrol()
 		}
 
 		flywheel.setTargetRPM(isSpinning ? goal : 0);
+		// flywheel_motor_two.set_velocity_custom_controller(isSpinning ? goal : 0);
+		// flywheel_motor.set_velocity_custom_controller(isSpinning ? goal : 0);
 
 		if (isTurretMode)
 		{
@@ -361,7 +370,7 @@ void opcontrol()
 		}
 
 		double target = atan2(xPos - 19, yPos - 19) * 180 / M_PI - 180;
-		printf("\n%f,%f,%f,%f", target, xPos, yPos, angle);
+		// printf("\n%f,%f,%f,%f", target, xPos, yPos, angle);
 		driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
 		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
 
@@ -381,7 +390,7 @@ void opcontrol()
 		}
 		if (counter % 5 == 0)
 		{
-			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
+			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel_motor.get_velocity()));
 		}
 
 		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);

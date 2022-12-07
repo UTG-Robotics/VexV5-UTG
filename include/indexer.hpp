@@ -13,4 +13,5 @@ private:
     pros::Motor *motor;
     pros::Task *task;
     bool isShooting = false;
+    bool hasShot = false;
 };

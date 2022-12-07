@@ -17,8 +17,14 @@ void Indexer::run()
         {
             if (this->motor->get_position() - 100 > -20)
             {
-                this->isShooting = false;
+                this->hasShot = true;
                 this->motor->move_absolute(0, 200);
+            }
+            if (this->hasShot && this->motor->get_position() < 5)
+            {
+                this->isShooting = false;
+                this->hasShot = false;
+                this->motor->move(-20);
             }
         }
         pros::delay(20);
@@ -29,9 +35,9 @@ void Indexer::shoot()
 {
     if (!this->isShooting)
     {
+        this->isShooting = true;
         this->motor->tare_position();
         this->motor->move_absolute(100, 200);
-        this->isShooting = true;
     }
 }
 

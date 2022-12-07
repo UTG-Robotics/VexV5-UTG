@@ -4,7 +4,7 @@
 class Flywheel
 {
 public:
-    Flywheel(pros::Motor *motor, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew);
+    Flywheel(sylib::Motor *motor, sylib::Motor *motor_two, VelPID *pid, EMAFilter *filter, double gearRatio, double motorSlew);
     void run();
     static void taskFn(void *param);
     void setTargetRPM(double rpm);
@@ -12,12 +12,14 @@ public:
     double getCurrentRPM();
     double getAverageRPM();
     void waitUntilReady();
+    bool IsAtTarget();
     void updatePID(VelPID *pid);
     bool isShot = false;
     bool isRecovering = false;
 
 private:
-    pros::Motor *flywheelMotor;
+    sylib::Motor *flywheelMotor;
+    sylib::Motor *flywheelMotorTwo;
     VelPID *pid;
     EMAFilter *rpmFilter;
     EMAFilter *accelEMAFilter;
