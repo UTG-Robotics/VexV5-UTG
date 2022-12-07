@@ -301,7 +301,7 @@ void opcontrol()
 			indexer.shoot();
 		}
 
-		if (controller.get_digital_new_press(DIGITAL_R2))
+		if (controller.get_digital_new_press(DIGITAL_X))
 		{
 			isRollerMode = !isRollerMode;
 		}
@@ -317,7 +317,7 @@ void opcontrol()
 			intake_mtr.move_velocity(-200 * (isRollerMode ? 0.5 : 1));
 		}
 
-		if (controller.get_digital_new_press(DIGITAL_X))
+		if (controller.get_digital_new_press(DIGITAL_R2))
 		{
 			isTurretMode = !isTurretMode;
 		}
@@ -327,24 +327,10 @@ void opcontrol()
 			isSpinning = !isSpinning;
 		}
 
-		if (controller.get_digital_new_press(DIGITAL_B))
-		{
-			isForward = !isForward;
-		}
-
-		if (controller.get_digital(DIGITAL_Y))
-		{
-			expansion_mtr.move_velocity(40);
-		}
-		else
-		{
-			expansion_mtr.move_velocity(0);
-		}
-
-		if (controller.get_digital_new_press(DIGITAL_B))
-		{
-			isForward = !isForward;
-		}
+		// if (controller.get_digital_new_press(DIGITAL_B))
+		// {
+		// 	isForward = !isForward;
+		// }
 
 		if (controller.get_digital_new_press(DIGITAL_UP))
 		{
@@ -355,7 +341,7 @@ void opcontrol()
 			goal -= 100;
 		}
 
-		if (controller.get_digital_new_press(DIGITAL_RIGHT))
+		if (controller.get_digital(DIGITAL_RIGHT) && controller.get_digital(DIGITAL_Y))
 		{
 			expansion.toggle();
 		}
