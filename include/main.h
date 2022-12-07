@@ -41,6 +41,7 @@
 /**
  * You should add more #includes here
  */
+#include "sylib/sylib.hpp"
 #include <math.h>
 #include "XDrive.hpp"
 #include "pid.hpp"
