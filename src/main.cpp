@@ -288,6 +288,25 @@ void opcontrol()
 	yPos = 0;
 	angle = 0;
 
+	// driveTrain.setStartPos(108, 14, 0);
+	// flywheel.setTargetRPM(2650);
+	// // Drive into roller
+	// driveTrain.driveToPoint(106, 8, 0, 100, 1000);
+	// // Spin roller
+	// intake_mtr.move_velocity(-100);
+	// pros::delay(500);
+	// intake_mtr.move_velocity(0);
+	// // Drive back + turn to goal
+	// driveTrain.driveToPoint(106, 14, -6, 100, 1000);
+	// // Take two shots
+	// // flywheel.waitUntilReady();
+	// pros::delay(1000);
+	// indexer.shoot();
+	// pros::delay(2000);
+	// // flywheel.waitUntilReady();
+	// indexer.shoot();
+	// pros::delay(20000);
+
 	intake_mtr.move_velocity(200);
 	while (true)
 	{
@@ -296,7 +315,7 @@ void opcontrol()
 		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
 		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X) / 127.0 * 200.0;
 
-		if (controller.get_digital(DIGITAL_R1) && flywheel.IsAtTarget())
+		if (controller.get_digital(DIGITAL_R1) && flywheel.IsAtTarget(50))
 		{
 			indexer.shoot();
 		}
@@ -376,7 +395,7 @@ void opcontrol()
 		}
 		if (counter % 5 == 0)
 		{
-			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel_motor.get_velocity()));
+			controller.set_text(0, 0, "RPM: " + std::to_string((int)flywheel.getCurrentRPM()));
 		}
 
 		// printf("X: %f, Y: %f, Angle: %f", getOdomState().x, getOdomState().y, getOdomState().theta);

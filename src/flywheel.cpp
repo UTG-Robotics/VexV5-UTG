@@ -29,7 +29,7 @@ void Flywheel::run()
     double averageArray[averageLength] = {};
     now = pros::millis();
     // printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain,voltageOut,deltaTime,vexDeltaTime,deltaTicks");
-    printf("\ntime,velocity,output,target");
+    printf("\ntime,velocity,rpm,acceleration,output,target");
     while (true)
     {
         // this->currentTime = pros::millis();
@@ -83,7 +83,7 @@ void Flywheel::run()
         }
         flywheelMotor->set_voltage(output);
         flywheelMotorTwo->set_voltage(-output);
-        printf("\n%d,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_acceleration(), output, targetRPM);
+        printf("\n%d,%f,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_acceleration(), output, targetRPM);
         // acceleration = (this->currentRPM - oldRPM) / ((pros::millis() - oldTime));
         // isShot = acceleration <= -3;
         // if (isShot && !isRecovering)
@@ -146,16 +146,16 @@ double Flywheel::getAverageRPM()
 
 void Flywheel::waitUntilReady()
 {
-    while (abs(averageRPM - targetRPM) > 10 || averageRPM < targetRPM)
+    while (!this->IsAtTarget(50))
     {
         pros::delay(20);
     }
     return;
     // return abs(this->currentRPM - targetRPM) < 5;
 }
-bool Flywheel::IsAtTarget()
+bool Flywheel::IsAtTarget(int threshold)
 {
-    return abs(this->currentRPM - targetRPM) < 50;
+    return abs(this->currentRPM - targetRPM) < threshold;
 }
 void Flywheel::updatePID(VelPID *pid)
 {
