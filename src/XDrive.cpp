@@ -6,6 +6,11 @@ XDrive::XDrive(pros::Motor *FR_mtr, pros::Motor *FL_mtr, pros::Motor *BR_mtr, pr
     this->FL_mtr = FL_mtr;
     this->BR_mtr = BR_mtr;
     this->BL_mtr = BL_mtr;
+    // Set brake modes
+    this->FR_mtr->set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    this->FL_mtr->set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    this->BR_mtr->set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    this->BL_mtr->set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     this->slew_rate = slew_rate;
 }
 
@@ -38,10 +43,37 @@ void XDrive::arcade(int x, int y, int rot)
     y = y;
     rot = rot;
 
-    this->FR_mtr->move(slew(FR_mtr->get_voltage() / 12000.0 * 127.0, -y + rot + x, this->slew_rate));
-    this->FL_mtr->move(slew(FL_mtr->get_voltage() / 12000.0 * 127.0, y + rot + x, this->slew_rate));
-    this->BR_mtr->move(slew(BR_mtr->get_voltage() / 12000.0 * 127.0, -y + rot - x, this->slew_rate));
-    this->BL_mtr->move(slew(BL_mtr->get_voltage() / 12000.0 * 127.0, y + rot - x, this->slew_rate));
+    // this->FR_mtr->move(slew(FR_mtr->get_voltage() / 12000.0 * 127.0, -y + rot + x, this->slew_rate));
+    // this->FL_mtr->move(slew(FL_mtr->get_voltage() / 12000.0 * 127.0, y + rot + x, this->slew_rate));
+    // this->BR_mtr->move(slew(BR_mtr->get_voltage() / 12000.0 * 127.0, -y + rot - x, this->slew_rate));
+    // this->BL_mtr->move(slew(BL_mtr->get_voltage() / 12000.0 * 127.0, y + rot - x, this->slew_rate));
+
+    int speeds[4] = {-y + rot + x, y + rot + x, -y + rot - x, y + rot - x};
+
+    // int max = 0;
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     if (abs(speeds[i]) > max)
+    //     {
+    //         max = abs(speeds[i]);
+    //     }
+    // }
+
+    // if (max > 127)
+    // {
+    //     for (int i = 0; i < 4; i++)
+    //     {
+    //         speeds[i] = speeds[i] / max * 127;
+    //     }
+    // }
+    this->FR_mtr->move(speeds[0]);
+    this->FL_mtr->move(speeds[1]);
+    this->BR_mtr->move(speeds[2]);
+    this->BL_mtr->move(speeds[3]);
+    // this->FR_mtr->move(-y + rot + x);
+    // this->FL_mtr->move(y + rot + x);
+    // this->BR_mtr->move(-y + rot - x);
+    // this->BL_mtr->move(y + rot - x);
 }
 
 void XDrive::debug()
@@ -81,7 +113,7 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
     PID anglePID = PID(0.015, 0.001, 0.005, 5);
     // PID speedPID = PID(0, 0, 0, 0);
     // PID anglePID = PID(0, 0, 0, 0);
-    printf("time,error,output,xPow,yPow");
+    // printf("time,error,output,xPow,yPow");
     while (true)
     {
 
@@ -121,7 +153,7 @@ void XDrive::driveToPoint(double x, double y, double targetAngle, double maxSpee
 
         isWithinRange = (abs(errorSpeed) < 0.5 && abs(errorAngle) < 0.5);
         // If the error is within an acceptable margin or timeout is over, start timer
-        printf("\n%d,%f,%f,%f,%f", pros::millis(), errorSpeed, speedSpeed, xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127), yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
+        // printf("\n%d,%f,%f,%f,%f", pros::millis(), errorSpeed, speedSpeed, xPowerPercentage * (speedSpeed * 127) + (speedAngle * 127), yPowerPercentage * (speedSpeed * 127) + (speedAngle * 127));
         // printf("\n%d,%f,%f", pros::millis(), errorAngle, speedAngle);
         if ((isWithinRange || (pros::millis() - startTime) > timeout))
         {
