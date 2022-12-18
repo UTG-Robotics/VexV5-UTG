@@ -9,7 +9,7 @@ double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
-int goal = 2300;
+int goal = 100;
 bool isSpinning = true;
 bool isTurretMode = false;
 bool isRollerMode = false;
@@ -17,10 +17,14 @@ bool isForward = false;
 int counter = 0;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
-pros::Motor front_right_mtr(11);
-pros::Motor front_left_mtr(20);
-pros::Motor back_right_mtr(10);
-pros::Motor back_left_mtr(2);
+
+pros::Motor front_right_mtr(10);
+pros::Motor front_left_mtr(1);
+pros::Motor back_right_mtr(20);
+pros::Motor back_left_mtr(11);
+
+pros::Motor_Group left_motors({front_left_mtr, back_left_mtr});
+pros::Motor_Group right_motors({front_right_mtr, back_right_mtr});
 
 // pros::Motor flywheel_mtr(8);
 // pros::Motor flywheel_mtr_two(7);
@@ -28,12 +32,13 @@ pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 pros::Motor expansion_mtr(17);
 
-auto flywheel_motor = sylib::Motor(8, 3000, false);
-auto flywheel_motor_two = sylib::Motor(7, 3000, true);
+auto flywheel_motor = sylib::Motor(7, 3600, false);
+auto flywheel_motor_two = sylib::Motor(2, 3000, true);
 // 3.5417x+1086
 VelPID *drivePID = new VelPID(5, 0, 0, 3.5417, 1086, 0.1, false);
 Flywheel flywheel(&flywheel_motor, &flywheel_motor_two, drivePID, new EMAFilter(0.15), 15, 50);
-XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
+// XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
+TankDrive driveTrain(&left_motors, &right_motors);
 Indexer indexer(&indexer_mtr);
 Piston expansion(1);
 PID autoAimPID = PID(0.015, 0.001, 0.005, 5);
@@ -280,7 +285,7 @@ void opcontrol()
 
 	// driveTrain.driveToPoint(-12, -12, 90, 127, 2500000);
 	// driveTrain.setStartPos(80.25, 14.75, 0);
-	driveTrain.setStartPos(0, 0, 0);
+	// driveTrain.setStartPos(0, 0, 0);
 	// xPos = 80.25;
 	// yPos = 14.75;
 	// angle = 0;
@@ -376,7 +381,8 @@ void opcontrol()
 
 		double target = atan2(xPos - 19, yPos - 19) * 180 / M_PI - 180;
 		// printf("\n%f,%f,%f,%f", target, xPos, yPos, angle);
-		driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
+		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
+		driveTrain.tank(joystickCh3, joystickCh2);
 		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
 
 		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
