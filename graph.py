@@ -21,13 +21,26 @@ app.layout = html.Div(
 @app.callback(Output('live-update-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
 def update_graph_live(n):
-    df = pandas.read_csv('data.csv', skiprows=19)
-    df["acceleration"] *= 1000
+    # with open("data.csv", "r") as f:
+    #     lines = f.readlines()
+    # with open("cleanedData.csv", "w"):
+    #     for line in lines:
+    #         if "sylib" in line:
+    #             lines = lines[20:]
+
+    df = pandas.read_csv('data.csv', skiprows=0)
+    df['rpm'] *= -1
+    df['velocity'] *= -1
+
+
+
     plot = px.scatter( df,
     x="time",
     y=[
-        "filteredVelocity",
-        "vexVelocity",
+        # "rpm",
+        "velocity",
+        "wattageOne",
+        "wattageTwo",
         # "rawVelocity",
         # "voltageOut"
         # "acceleration",
