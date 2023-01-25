@@ -43,8 +43,11 @@
  */
 #include "sylib/sylib.hpp"
 #include <math.h>
-#include "XDrive.hpp"
+#include <vector>
 #include "pid.hpp"
+#include "XDrive.hpp"
+#include "TankDrive.hpp"
+#include "profile.hpp"
 #include "odometry.hpp"
 #include "filters/SMAFilter.hpp"
 #include "filters/EMAFilter.hpp"
@@ -53,7 +56,7 @@
 #include "indexer.hpp"
 #include "piston.hpp"
 #include "okapi/api.hpp"
-//#include "pros/api_legacy.h"
+// #include "pros/api_legacy.h"
 
 extern double xPos;
 extern double yPos;
@@ -106,7 +109,7 @@ extern "C"
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
+// #include <iostream>
 #endif
 
 #endif // _PROS_MAIN_H_
