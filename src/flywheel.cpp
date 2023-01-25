@@ -29,7 +29,7 @@ void Flywheel::run()
     double averageArray[averageLength] = {};
     now = pros::millis();
     // printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain,voltageOut,deltaTime,vexDeltaTime,deltaTicks");
-    printf("\ntime,velocity,rpm,acceleration,output,target");
+    printf("\ntime,velocity,rpm,wattageOne,wattageTwo,output,target");
     while (true)
     {
         // this->currentTime = pros::millis();
@@ -74,6 +74,7 @@ void Flywheel::run()
 
         // averageArray[i] = this->currentRPM;
         output = pid->calculate(targetRPM, this->currentRPM);
+        output = 13000;
         // output = targetRPM;
 
         if (isRecovering && pros::millis() - lastShotTime < 1000)
@@ -81,9 +82,9 @@ void Flywheel::run()
             // output += 1000;
             // printf("Output: %f Boosting!\n", output);
         }
-        flywheelMotor->set_voltage(output);
-        flywheelMotorTwo->set_voltage(-output);
-        printf("\n%d,%f,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_acceleration(), output, targetRPM);
+        flywheelMotor->set_voltage(-output);
+        flywheelMotorTwo->set_voltage(output);
+        printf("\n%d,%f,%f,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_watts(), this->flywheelMotorTwo->get_watts(), output, targetRPM);
         // acceleration = (this->currentRPM - oldRPM) / ((pros::millis() - oldTime));
         // isShot = acceleration <= -3;
         // if (isShot && !isRecovering)
