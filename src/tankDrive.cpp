@@ -16,3 +16,7 @@ void TankDrive::tank(int left, int right)
     this->left_motors->move(left);
     this->right_motors->move(right);
 }
+
+void TankDrive::forwardPID(double distance, double maxSpeed)
+{
+}
