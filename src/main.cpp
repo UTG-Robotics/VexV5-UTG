@@ -21,7 +21,7 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::Motor front_right_mtr(10);
 pros::Motor front_left_mtr(1);
 pros::Motor back_right_mtr(20);
-pros::Motor back_left_mtr(11);
+pros::Motor back_left_mtr(13);
 
 pros::Motor_Group left_motors({front_left_mtr, back_left_mtr});
 pros::Motor_Group right_motors({front_right_mtr, back_right_mtr});
@@ -32,8 +32,8 @@ pros::Motor intake_mtr(1);
 pros::Motor indexer_mtr(19);
 pros::Motor expansion_mtr(17);
 
-auto flywheel_motor = sylib::Motor(7, 3600, false);
-auto flywheel_motor_two = sylib::Motor(2, 3000, true);
+auto flywheel_motor = sylib::Motor(11, 3600, false);
+auto flywheel_motor_two = sylib::Motor(12, 3600, true);
 // 3.5417x+1086
 VelPID *drivePID = new VelPID(5, 0, 0, 3.5417, 1086, 0.1, false);
 Flywheel flywheel(&flywheel_motor, &flywheel_motor_two, drivePID, new EMAFilter(0.15), 15, 50);
