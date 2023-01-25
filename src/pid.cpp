@@ -22,14 +22,11 @@ double PID::calculate(double error)
 
     if (this->Ki != 0)
     {
-        if (abs(this->error) < this->KiStart && abs(this->error) > 0.1)
+        if (abs(this->error) < this->KiStart)
         {
             this->integral += this->error;
         }
-        else
-        {
-            this->integral = 0;
-        }
+        // if (lastError)
     }
     else
     {
@@ -39,3 +36,11 @@ double PID::calculate(double error)
     derivative = this->error - this->lastError;
     return this->Kp * this->error + this->Ki * integral + this->Kd * derivative;
 }
+
+// void PID::setConstants(double p, double i, double d, double iStart)
+// {
+//     this->Kp = p;
+//     this->Ki = i;
+//     this->Kd = d;
+//     this->KiStart = iStart;
+// }
