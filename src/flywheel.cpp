@@ -6,7 +6,7 @@ Flywheel::Flywheel(sylib::Motor *motor, sylib::Motor *motor_two, VelPID *pid, EM
     this->flywheelMotor = motor;
     this->flywheelMotorTwo = motor_two;
     // this->flywheelMotor->set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    // this->flywheelMotor->set_reversed(false);
+    // this->flywheelMotor->set_is_reversed(true);
     // this->flywheelMotor->set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 
     this->pid = pid;
@@ -57,7 +57,7 @@ void Flywheel::run()
         // this->oldTicks = this->currentTicks;
         // this->realVelocity = ((double)this->dP / (double)this->timestampDiff) * 1000;
 
-        this->currentRPM = this->rpmFilter->filter(this->smaFilter->filter(this->flywheelMotor->get_velocity()));
+        this->currentRPM = -this->rpmFilter->filter(this->smaFilter->filter(this->flywheelMotor->get_velocity()));
 
         // this->currentAccel = (this->currentRPM - this->lastRPM) / (this->currentTime - this->prevTime);
         // // scale acceleration to ema between 0.1 and 0.3
@@ -74,7 +74,6 @@ void Flywheel::run()
 
         // averageArray[i] = this->currentRPM;
         output = pid->calculate(targetRPM, this->currentRPM);
-        output = 13000;
         // output = targetRPM;
 
         if (isRecovering && pros::millis() - lastShotTime < 1000)

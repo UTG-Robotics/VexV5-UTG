@@ -9,37 +9,38 @@ double angle = 0;
 int selectedAuto = 0;
 bool hasAutoStarted = false;
 bool isShooting = false;
-int goal = 100;
-bool isSpinning = true;
+int goal = 3000;
+bool isSpinning = false;
 bool isTurretMode = false;
 bool isRollerMode = false;
+int rollerDir = 1;
 bool isForward = false;
 int counter = 0;
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
-pros::Motor front_right_mtr(10);
-pros::Motor front_left_mtr(1);
-pros::Motor back_right_mtr(20);
-pros::Motor back_left_mtr(13);
+pros::Motor front_right_mtr(13);
+pros::Motor front_left_mtr(20);
+pros::Motor back_right_mtr(1);
+pros::Motor back_left_mtr(8);
 
 pros::Motor_Group left_motors({front_left_mtr, back_left_mtr});
 pros::Motor_Group right_motors({front_right_mtr, back_right_mtr});
 
 // pros::Motor flywheel_mtr(8);
 // pros::Motor flywheel_mtr_two(7);
-pros::Motor intake_mtr(1);
-pros::Motor indexer_mtr(19);
-pros::Motor expansion_mtr(17);
+pros::Motor intake_mtr(10);
+pros::Motor indexer_mtr(9);
 
 auto flywheel_motor = sylib::Motor(11, 3600, false);
 auto flywheel_motor_two = sylib::Motor(12, 3600, true);
 // 3.5417x+1086
-VelPID *drivePID = new VelPID(5, 0, 0, 3.5417, 1086, 0.1, false);
+VelPID *drivePID = new VelPID(7, 0, 0, 3.0062, 584.13, 0.1, false);
 Flywheel flywheel(&flywheel_motor, &flywheel_motor_two, drivePID, new EMAFilter(0.15), 15, 50);
 // XDrive driveTrain(&front_right_mtr, &front_left_mtr, &back_right_mtr, &back_left_mtr, 20);
 TankDrive driveTrain(&left_motors, &right_motors);
 Indexer indexer(&indexer_mtr);
+pros::ADIPotentiometer potentiometer('F', pros::E_ADI_POT_V2);
 Piston expansion(1);
 PID autoAimPID = PID(0.015, 0.001, 0.005, 5);
 
@@ -255,7 +256,7 @@ void opcontrol()
 	// sideEncoder.reset_position();
 	// autonomous();
 	// flywheel.updatePID(drivePID);
-
+	// goal = 1000;
 	// while (goal <= 13000)
 	// {
 	// 	flywheel.setTargetRPM(goal);
@@ -311,8 +312,12 @@ void opcontrol()
 	// // flywheel.waitUntilReady();
 	// indexer.shoot();
 	// pros::delay(20000);
+	// std::vector<double> profile = generateProfile(0, 0.304, 1, 5, 10, 0.001);
 
-	intake_mtr.move_velocity(200);
+	// driveTrain.followProfileForward(profile);
+	// intake_mtr.move_velocity(200);
+
+	driveTrain.setBrake(0.02, 10);
 	while (true)
 	{
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
@@ -320,7 +325,7 @@ void opcontrol()
 		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
 		float joystickCh4 = controller.get_analog(ANALOG_LEFT_X) / 127.0 * 200.0;
 
-		if (controller.get_digital(DIGITAL_R1) && flywheel.IsAtTarget(50))
+		if (controller.get_digital(DIGITAL_R1))
 		{
 			indexer.shoot();
 		}
@@ -333,12 +338,12 @@ void opcontrol()
 		if (controller.get_digital(DIGITAL_L1))
 		{
 			// spin intake forwards
-			intake_mtr.move_velocity(200 * (isRollerMode ? 0.5 : 1));
+			intakeDir = 1;
 		}
 		else if (controller.get_digital(DIGITAL_L2))
 		{
 			// spin intake backwards
-			intake_mtr.move_velocity(-200 * (isRollerMode ? 0.5 : 1));
+			intakeDir = -1;
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_R2))
@@ -382,6 +387,7 @@ void opcontrol()
 		double target = atan2(xPos - 19, yPos - 19) * 180 / M_PI - 180;
 		// printf("\n%f,%f,%f,%f", target, xPos, yPos, angle);
 		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), joystickCh1);
+		intake_mtr.move_voltage(intakeDir * (isRollerMode ? 0.5 : 1) * 12000);
 		driveTrain.tank(joystickCh3, joystickCh2);
 		// driveTrain.arcade(joystickCh4 * (isForward ? -1 : 1), joystickCh3 * (isForward ? -1 : 1), autoAimPID.calculate(target - angle * 180 / M_PI) * 127);
 
