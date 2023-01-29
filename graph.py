@@ -39,8 +39,8 @@ def update_graph_live(n):
     y=[
         # "rpm",
         "velocity",
-        "wattageOne",
-        "wattageTwo",
+        # "wattageOne",
+        # "wattageTwo",
         # "rawVelocity",
         # "voltageOut"
         # "acceleration",

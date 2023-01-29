@@ -10,7 +10,6 @@ std::vector<double> generateProfile(double start, double target, double maxVel, 
     double curAccel = 0;
     double curJerk = 0;
     int i = 0;
-    printf("start\n");
     while (true)
     {
         curTime += dt;
@@ -73,14 +72,8 @@ std::vector<double> generateProfile(double start, double target, double maxVel, 
         {
             break;
         }
-        // i++;
-        // if (i % 100 == 0)
-        // {
-        //     printf("Step %i - CurVel: %f, CurAccel: %f, CurJerk: %f\n", i, curVel, curAccel, curJerk);
-        // }
         pros::delay(1);
     }
-    printf("function size: %i\n", output.size());
     std::vector<double> profile;
     for (int i = 0; i < output.size(); i += (int)(0.02 / dt))
     {
