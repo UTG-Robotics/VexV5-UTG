@@ -45,9 +45,9 @@
 #include <math.h>
 #include <vector>
 #include "pid.hpp"
+#include "profile.hpp"
 #include "XDrive.hpp"
 #include "TankDrive.hpp"
-#include "profile.hpp"
 #include "odometry.hpp"
 #include "filters/SMAFilter.hpp"
 #include "filters/EMAFilter.hpp"
@@ -72,6 +72,7 @@ extern pros::Motor front_right_mtr;
 extern pros::Motor front_left_mtr;
 extern pros::Motor back_right_mtr;
 extern pros::Motor back_left_mtr;
+extern Piston expansion;
 extern int selectedAuto;
 
 /**
