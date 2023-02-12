@@ -1,8 +1,8 @@
 #include "main.h"
-std::vector<double> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt)
+std::vector<SetPoint *> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt, double outputTime)
 {
     target -= start;
-    std::vector<double> output;
+    std::vector<SetPoint *> output;
     double curTime = 0;
 
     double curPos = 0;
@@ -66,15 +66,14 @@ std::vector<double> generateProfile(double start, double target, double maxVel, 
         curVel += curAccel * dt;
         curPos += curVel * dt;
 
-        output.push_back(curVel);
+        output.push_back(new SetPoint(curPos, curVel, curAccel, curJerk, curTime));
 
         if (curVel < 0.01 && curAccel < 0.01 && curJerk == 0)
         {
             break;
         }
-        pros::delay(1);
     }
-    std::vector<double> profile;
+    std::vector<SetPoint *> profile;
     for (int i = 0; i < output.size(); i += (int)(0.02 / dt))
     {
         profile.push_back(output.at(i));
