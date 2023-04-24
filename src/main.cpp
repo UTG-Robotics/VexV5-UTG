@@ -1,7 +1,7 @@
 #include "main.h"
 #include "autoSelect/selection.h"
 #include <fstream>
-#include <iomanip>
+// #include <iomanip>
 
 double xPos = 0;
 double yPos = 0;
@@ -76,8 +76,10 @@ void autoSelector()
 
 void initialize()
 {
+	std::cout << "Initializing" << std::endl;
 	sylib::initialize();
 	selector::init();
+
 	// pros::lcd::initialize();
 	pros::delay(2000);
 	driveTrain.setBrake(0.01);
@@ -193,73 +195,117 @@ void autonomous()
 	indexer.shoot(true);
 	*/
 	hasAutoStarted = true;
+	selector::auton = 3;
 
 	// flywheel.updatePID(drivePID);
 	// Right Auto
-	selector::auton = 0;
 	if (selector::auton == 3)
 	{
-		driveTrain.forwardPID(-18, 127 / 2, true);
+
+		// driveTrain.followProfileForward(generateProfile(0, -60 / 12.0, 4, 20.25, 40, 0.0001));
+
+		// while (1)
+		// {
+		// 	pros::delay(20);
+		// }
+
+		driveTrain.autoOver = true;
+		flywheel.setTargetRPM(3500);
+
+		driveTrain.forwardPID(-22, 127 / 2, true);
 		driveTrain.autoWait();
 		driveTrain.turnPID(90, 127 / 2);
 		driveTrain.autoWait();
-		flywheel.setTargetRPM(2960);
+		// driveTrain.followProfileForward(generateProfile(0, - / 12.0, 4, 20.25, 40, 0.0001));
 		driveTrain.forwardPID(-3, 127 / 2, true);
 		driveTrain.autoWait();
-		driveTrain.tank(-30, -30);
+		driveTrain.tank(-20, -20);
 		pros::delay(500);
-		intake_mtr.move_velocity(-150);
+		// intake_mtr.move_relative(-500, 200);
+		intake_mtr.move_absolute(-500, 100);
+		// while (abs(intake_mtr.get_position() - -500) > 20)
+		// {
+		// 	pros::delay(20);
+		// }
 		pros::delay(350);
-		intake_mtr.move_velocity(0);
-		driveTrain.forwardPID(6, 127 / 2, true);
+		driveTrain.forwardPID(3, 127 / 2, true);
 		driveTrain.autoWait();
-		driveTrain.turnPID(95, 127 / 2);
+		// driveTrain.followProfileForward(generateProfile(0, 1, 4, 20.25, 40, 0.0001));
+		// driveTrain.followProfileForward(generateProfile(0, 0.05, 4, 20.25, 40, 0.0001));
+		// pros::delay(100);
+		driveTrain.turnPID(92, 127 / 2);
 		driveTrain.autoWait();
+		pros::delay(100);
 		indexer.shoot(true);
+		pros::delay(700);
 		indexer.shoot(true);
+		pros::delay(100);
 		driveTrain.turnPID(225, 127 / 2);
 		driveTrain.autoWait();
 		intake_mtr.move_velocity(200);
-		driveTrain.forwardPID(-60, 55, true);
+		// driveTrain.followProfileForward(generateProfile(0, -60 / 12.0, 4, 20.25, 40, 0.0001));
+		flywheel.setTargetRPM(3150);
+		driveTrain.forwardPID(-70, 127 / 2.5, true);
 		driveTrain.autoWait();
-		flywheel.setTargetRPM(2700);
-		driveTrain.turnPID(136, 127 / 2);
+		driveTrain.turnPID(129, 127 / 2);
 		driveTrain.autoWait();
 		indexer.shoot(true);
+		pros::delay(350);
 		indexer.shoot(true);
+		pros::delay(350);
 		indexer.shoot(true);
 	}
 	// Left Auto
 	else if (selector::auton == 2)
 	{
-		driveTrain.tank(-30, -30);
-		intake_mtr.move_velocity(-150);
+		driveTrain.autoOver = true;
+		flywheel.setTargetRPM(3400);
+		pros::delay(2000);
+		driveTrain.followProfileForward(generateProfile(0, -0.2, 4, 20.25, 40, 0.0001));
+		// driveTrain.followProfileForward(generateProfile(0, -0.2, 4, 20.25, 40, 0.0001));
+		driveTrain.tank(-20, -20);
+		intake_mtr.move_absolute(-1000, 100);
 		pros::delay(250);
-		intake_mtr.move_velocity(0);
-		flywheel.setTargetRPM(3030);
-		driveTrain.swingPID(-10, 127 / 2, false);
+		driveTrain.tank(0, 0);
+		driveTrain.swingPID(-16, 127 / 2, false);
 		driveTrain.autoWait();
-		pros::delay(1000);
+		// pros::delay(250);
 		indexer.shoot(true);
+		pros::delay(350);
 		indexer.shoot(true);
-		pros::delay(1000);
-		driveTrain.turnPID(-130, 127 / 2);
+		pros::delay(250);
+
+		driveTrain.turnPID(-128, 127 / 2);
 		driveTrain.autoWait();
-		pros::delay(1000);
+		// pros::delay(1000);
 		intake_mtr.move_velocity(200);
-		flywheel.setTargetRPM(2800);
-		driveTrain.forwardPID(-38, 127 * 0.75, false);
-		driveTrain.autoWaitUntil(26);
-		driveTrain.setMaxSpeed(127 / 4);
-		driveTrain.autoWaitUntil(12);
-		driveTrain.setMaxSpeed(127 / 6);
+		flywheel.setTargetRPM(3100);
+		// driveTrain.forwardPID(-38, 127 * 0.75, false);
+		// driveTrain.followProfileForward(generateProfile(0, -13.0 / 12.0, 3.5, 20.25, 40, 0.0001));
+		driveTrain.forwardPID(-35, 127 * 0.75, true);
+		driveTrain.autoWait(5);
+		// driveTrain.followProfileForward(generateProfile(0, -4 / 12.0, 2, 20.25, 40, 0.0001));
+		// pros::delay(250);
+		driveTrain.forwardPID(-30, 127 * 0.25, true);
 		driveTrain.autoWait();
-		driveTrain.turnPID(-30, 127 / 2);
+		// driveTrain.followProfileForward(generateProfile(0, -6.0 / 12.0, 0.5, 20.25, 40, 0.0001));
+		// driveTrain.autoWaitUntil(26);
+		// driveTrain.setMaxSpeed(127 / 4);
+		// driveTrain.autoWaitUntil(12);
+		// driveTrain.setMaxSpeed(127 / 6);
+		// driveTrain.autoWait();
+		driveTrain.turnPID(-39, 127 / 2);
 		driveTrain.autoWait();
-		pros::delay(1000);
+		pros::delay(300);
 		indexer.shoot(true);
+		pros::delay(250);
 		indexer.shoot(true);
+		pros::delay(250);
 		indexer.shoot(true);
+	}
+	else if (selector::auton == 1)
+	{
+		driveTrain.autoOver = true;
 	}
 	else if (selector::auton == 0)
 	{
@@ -267,17 +313,17 @@ void autonomous()
 		driveTrain.tank(-30, -30);
 		pros::delay(100);
 		intake_mtr.move_velocity(-200);
-		pros::delay(300);
+		pros::delay(350);
 		intake_mtr.move_velocity(0);
 		driveTrain.forwardPID(3, 127 / 2, true);
 		driveTrain.autoWaitUntil(1);
-		driveTrain.turnPID(135, 127 / 2);
+		driveTrain.turnPID(135, 127 / 3);
 		driveTrain.autoWait();
 		intake_mtr.move_velocity(200);
-		driveTrain.forwardPID(-18, 127 / 2, true);
+		driveTrain.forwardPID(-18, 127 / 2.5, true);
 		driveTrain.autoWait();
 		driveTrain.turnPID(90, 127 / 2);
-		flywheel.setTargetRPM(2745);
+		flywheel.setTargetRPM(2810);
 		driveTrain.autoWait();
 		driveTrain.forwardPID(-9, 127 / 2, true);
 		intake_mtr.move_velocity(0);
@@ -286,7 +332,7 @@ void autonomous()
 		intake_mtr.move_velocity(-200);
 		pros::delay(400);
 		intake_mtr.move_velocity(0);
-		driveTrain.swingPID(-3, 127 / 2, false);
+		driveTrain.swingPID(-7, 127 / 2, false);
 		driveTrain.autoWait();
 		indexer.shoot(true);
 		indexer.shoot(true);
@@ -297,25 +343,26 @@ void autonomous()
 		driveTrain.autoWaitUntil(1);
 		driveTrain.turnPID(-135, 127 / 2);
 		driveTrain.autoWait();
-		flywheel.setTargetRPM(2380);
-		driveTrain.forwardPID(-60, 55, true);
+		flywheel.setTargetRPM(2450);
+		driveTrain.forwardPID(-62, 55, true);
+		// driveTrain.followProfileForward(generateProfile(0, -62 / 12, 2, 20.25, 40, 0.0001));
 		driveTrain.autoWait();
-		driveTrain.turnPID(-45, 127 / 2);
+		driveTrain.turnPID(-47, 127 / 2);
 		driveTrain.autoWait();
 		indexer.shoot(true);
 		indexer.shoot(true);
 		indexer.shoot(true);
 		pros::delay(350);
-		driveTrain.turnPID(-135, 127 / 2);
+		driveTrain.turnPID(-137, 127 / 2);
 		driveTrain.autoWait();
-		flywheel.setTargetRPM(2450);
+		flywheel.setTargetRPM(2550);
 		driveTrain.forwardPID(-40, 127 * 0.75, true);
 		driveTrain.autoWaitUntil(25);
 		driveTrain.setMaxSpeed(127 / 4);
 		driveTrain.autoWaitUntil(10);
 		driveTrain.setMaxSpeed(127 / 6);
 		driveTrain.autoWait();
-		driveTrain.turnPID(-80, 127 / 2);
+		driveTrain.turnPID(-85, 127 / 2);
 		driveTrain.autoWait();
 		indexer.shoot(true);
 		indexer.shoot(true);
@@ -325,10 +372,10 @@ void autonomous()
 		driveTrain.autoWait();
 		driveTrain.swingPID(-90, 127 / 2, true);
 		driveTrain.autoWait();
-		flywheel.setTargetRPM(2875);
+		flywheel.setTargetRPM(2940);
 		driveTrain.forwardPID(-24, 127 / 4, true);
 		driveTrain.autoWait();
-		driveTrain.turnPID(-80, 127 / 2);
+		driveTrain.turnPID(-89, 127 / 2);
 		driveTrain.autoWait();
 		indexer.shoot(true);
 		indexer.shoot(true);
@@ -339,18 +386,18 @@ void autonomous()
 		driveTrain.forwardPID(-6, 127 / 2, true);
 		driveTrain.autoWait();
 		intake_mtr.move_velocity(0);
-		driveTrain.tank(-40, -40);
+		driveTrain.tank(-30, -30);
 		intake_mtr.move_velocity(-200);
 		pros::delay(300);
 		intake_mtr.move_velocity(200);
-		pros::delay(300);
+		pros::delay(600);
 		intake_mtr.move_velocity(0);
 		driveTrain.forwardPID(27, 127 / 2, true);
 		driveTrain.autoWait();
 		driveTrain.turnPID(-180, 127 / 2);
 		driveTrain.autoWait();
 		driveTrain.forwardPID(-22, 127 / 2, true);
-		driveTrain.autoWait(4);
+		driveTrain.autoWait();
 		driveTrain.tank(-30, -30);
 		pros::delay(300);
 		intake_mtr.move_velocity(-200);
@@ -358,15 +405,15 @@ void autonomous()
 		intake_mtr.move_velocity(0);
 		pros::delay(100);
 		driveTrain.forwardPID(34, 127 / 2, true);
-		driveTrain.autoWait(4);
+		driveTrain.autoWait();
 		driveTrain.swingPID(-135, 127 / 2, false);
 		driveTrain.autoWait();
-		driveTrain.forwardPID(-20, 127 / 2, true);
+		driveTrain.forwardPID(-26, 127 / 2, true);
 		driveTrain.autoWait();
 		expansion.setExtended(true);
 	}
 	driveTrain.endAuto();
-	printf("Auto Ended\n");
+	// printf("Auto Ended\n");
 }
 
 void opcontrol()
@@ -402,21 +449,74 @@ void opcontrol()
 	xPos = 0;
 	yPos = 0;
 	angle = 0;
-	printf("starting Generation Started\n");
-	std::vector<SetPoint *> profile = generateProfile(0, 0.304, 1, 5, 10, 0.001);
-	printf("starting Generation Finished\n");
-	driveTrain.followProfileForward(profile);
-	printf("Profile Finished\n");
-	while (true)
-	{
-		pros::delay(20);
-	}
+	// printf("Generation Started\n");
+	// maxAccel = 37.0541918 / mass * 3.281
+	// Max m/s = 4.76583968
+	// std::vector<SetPoint> profile = generateProfile(0, 3, 1.5, 20.25, 40, 0.0001);
+
+	// printf("Profile Finished\n");
+	// double testVoltage = 0;
+	// flywheel.setTargetRPM(3000);
+	// pros::delay(2000);
+	// indexer.shoot(true);
+	// autonomous();
+	// driveTrain.followProfileForward(generateProfile(0, 1, 4, 20.25, 40, 0.0001));
+	// while (true)
+	// {
+	// 	// printf("dist: %f\n", driveTrain.getEncoders() / 50.277778 / 12);
+	// 	pros::delay(20);
+	// }
+
+	// 	testVoltage += 0.05;
+	// 	driveTrain.tank(testVoltage, testVoltage);
+	// 	printf("Voltage: %f, Velocity: %f\n", testVoltage, driveTrain.getVelocity());
+
 	// driveTrain.forwardPID(48, 127 / 2, true);
+	// pros::ADIAnalogOut coarse('G');
+	// pros::ADIAnalogOut fine('H');
+
+	// Sound sound("smb:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6");
+	// pros::Task task([&]
+	// 				{
+
+	// 					while (true) {
+	// 						for (int i = 0; i < sound.notes.size(); i++)
+	// 						{
+	// 							Note note = sound.notes.at(i);
+	// 							// playFreq(note.hz);
+	// 							auto output = HzToCommand(note.hz);
+	// 							coarse.set_value(output.first);
+	// 							fine.set_value(output.second);
+	// 							pros::delay(note.duration);
+	// 							// playFreq(0);
+	// 							// pros::delay(50);
+	// 						}
+	// 						// playFreq(0);
+	// 						pros::delay(1000);
+	// 					} });
+
+	// Sound sound("smb:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6");
+	// while (true)
+	// {
+	// 	for (int i = 0; i < sound.notes.size(); i++)
+	// 	{
+	// 		Note note = sound.notes.at(i);
+	// 		// playFreq(note.hz);
+	// 		auto output = HzToCommand(note.hz);
+	// 		coarse.set_value(output.first);
+	// 		fine.set_value(output.second);
+	// 		pros::delay(note.duration);
+	// 		// playFreq(0);
+	// 		// pros::delay(50);
+	// 	}
+	// 	// playFreq(0);
+	// 	pros::delay(1000);
+	// }
+
 	driveTrain.endAuto();
 	driveTrain.autoStop();
 	while (true)
 	{
-		printf("Auto %i Started\n", selector::auton);
 		float joystickCh1 = controller.get_analog(ANALOG_RIGHT_X) / 127.0 * 200.0;
 		float joystickCh2 = controller.get_analog(ANALOG_RIGHT_Y) / 127.0 * 200.0;
 		float joystickCh3 = controller.get_analog(ANALOG_LEFT_Y) / 127.0 * 200.0;
@@ -464,7 +564,7 @@ void opcontrol()
 
 		flywheel.setTargetRPM(isSpinning ? goal : 0);
 
-		intake_mtr.move_velocity(intakeDir * (isRollerMode ? 0.5 : 1) * 200);
+		intake_mtr.move_velocity(intakeDir * (isRollerMode ? 0 : 1) * 200);
 		driveTrain.tank(joystickCh3, joystickCh2);
 
 		if (counter % 60 == 0)
