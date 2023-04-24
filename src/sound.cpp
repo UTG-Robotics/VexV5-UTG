@@ -58,7 +58,7 @@ Sound::Sound(std::string rtttlIn)
     }
     curChar++;
     // Parse Notes
-    int duration = defaultDuration;
+    float duration = defaultDuration;
     int octave = defaultOctave;
     int note = 0;
     while (curChar < rtttl.length())
@@ -115,7 +115,7 @@ Sound::Sound(std::string rtttlIn)
         }
         if (rtttl[curChar] == '.')
         {
-            duration += duration / 2;
+            duration /= 1.5;
             curChar++;
         }
         // Parse octave
@@ -127,14 +127,14 @@ Sound::Sound(std::string rtttlIn)
         // Parse dot
         if (rtttl[curChar] == '.')
         {
-            duration += duration / 2;
+            duration /= 2;
             curChar++;
         }
         // Parse comma
         if (rtttl[curChar] == ',')
         {
             // Add note
-            std::cout << "Note: " << note << " Octave: " << octave << " Duration: " << duration << std::endl;
+            // std::cout << "Note: " << note << " Octave: " << octave << " Duration: " << duration << std::endl;
             Note tmpNote;
             tmpNote.hz = note == 0 ? 0 : 440 * std::pow(2, (note - 9 + (octave - 4) * 12) / 12.0);
             tmpNote.duration = std::round(60000.0 / (double)BPM / (double)duration * 4);
