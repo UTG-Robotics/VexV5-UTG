@@ -15,6 +15,9 @@ bool isRollerMode = false;
 int intakeDir = 1;
 int counter = 0;
 
+int disabledCounter = 0;
+bool driverStarted = false;
+
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 pros::Motor front_right_mtr(13);
@@ -40,6 +43,9 @@ pros::ADIPotentiometer potentiometer('F', pros::E_ADI_POT_V2);
 Indexer indexer(&indexer_mtr, &potentiometer);
 
 Piston expansion(1);
+
+pros::ADIAnalogOut coarse(1);
+pros::ADIAnalogOut fine(2);
 
 void autoSelector()
 {
@@ -74,12 +80,45 @@ void autoSelector()
 	}
 }
 
+std::pair<int, int> HzToCommand(int hz)
+{
+	std::vector<std::pair<int, int>> freqLookup = {{52, 18}, {101, 21}, {152, 25}, {202, 28}, {254, 32}, {306, 35}, {358, 40}, {410, 43}, {462, 46}, {515, 50}, {566, 53}, {614, 57}, {665, 62}, {717, 65}, {767, 68}, {815, 72}, {866, 76}, {919, 80}, {970, 83}, {1020, 87}, {1071, 90}, {1124, 94}, {1175, 98}, {1227, 102}, {1278, 105}, {1331, 109}, {1382, 112}, {1432, 116}, {1483, 120}, {1535, 124}, {1585, 128}, {1634, 131}, {1685, 135}, {1737, 138}, {1788, 142}, {1839, 146}, {1891, 149}, {1944, 153}, {1995, 156}, {2047, 160}, {2099, 164}, {1252, 167}, {2203, 171}, {2252, 175}, {2303, 179}, {2355, 182}, {2405, 186}, {2454, 190}, {2507, 193}, {2558, 197}, {2610, 201}, {2661, 204}, {2712, 208}, {2765, 212}, {2818, 215}, {2869, 219}, {2920, 223}, {2974, 226}, {3026, 230}, {3077, 234}, {3130, 237}, {3206, 240}, {3448, 244}, {4600, 248}, {8120, 251}, {0, 255}};
+	// Loop through the lookup table and find the lowest frequency that is greater than the input
+	if (hz <= 81)
+	{
+		return {255, 255};
+	}
+
+	int coarse = 0;
+	int diff = 0;
+	int fine = 0;
+
+	for (int i = 0; i < freqLookup.size(); i++)
+	{
+		if (freqLookup.at(i).first > hz)
+		{
+			coarse = freqLookup.at(i - 1).second;
+			diff = hz - freqLookup.at(i - 1).first;
+			break;
+		}
+	}
+	fine = freqLookup.at(diff).second;
+
+	return {coarse, fine};
+}
+void playFreq(int hz)
+{
+	std::pair<int, int> command = HzToCommand(hz);
+	coarse.set_value(command.first);
+	fine.set_value(command.second);
+}
+
 void initialize()
 {
 	std::cout << "Initializing" << std::endl;
 	sylib::initialize();
 	selector::init();
-
+	playFreq(0);
 	// pros::lcd::initialize();
 	pros::delay(2000);
 	driveTrain.setBrake(0.01);
@@ -100,7 +139,23 @@ void initialize()
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled()
+{
+	disabledCounter++;
+	if (disabledCounter >= 1 && driverStarted)
+	{
+
+		Sound sound("Jeopardy:d=4,o=6,b=125:c,f,c,f5,c,f,2c,c,f,c,f,a.,8g,8f,8e,8d,8c#,c,f,c,f5,c,f,2c,f.,8d,c,a#5,a5,g5,f5,p,d#,g#,d#,g#5,d#,g#,2d#,d#,g#,d#,g#,c.7,8a#,8g#,8g,8f,8e,d#,g#,d#,g#5,d#,g#,2d#,g#.,8f,d#,c#,c,p,a#5,p,g#.5,d#,g#");
+		for (int i = 0; i < sound.notes.size(); i++)
+		{
+			Note note = sound.notes.at(i);
+			playFreq(note.hz);
+			pros::delay(note.duration);
+			playFreq(0);
+			pros::delay(20);
+		}
+	}
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -131,6 +186,7 @@ the odometry, and the tracking,
 */
 void autonomous()
 {
+	playFreq(0);
 	/*
 		// Right side
 		driveTrain.forwardPID(-18, 127 / 2, true);
@@ -418,7 +474,11 @@ void autonomous()
 
 void opcontrol()
 {
-
+	playFreq(0);
+	if (disabledCounter > 0)
+	{
+		driverStarted = true;
+	}
 	// flywheel.setTargetRPM(3030);
 	// driveTrain.swingPID(-10, 127 / 2, false);
 	// driveTrain.autoWait();
