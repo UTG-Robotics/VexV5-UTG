@@ -5,9 +5,7 @@ Flywheel::Flywheel(sylib::Motor *motor, sylib::Motor *motor_two, VelPID *pid, EM
 
     this->flywheelMotor = motor;
     this->flywheelMotorTwo = motor_two;
-    // this->flywheelMotor->set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     // this->flywheelMotor->set_is_reversed(true);
-    // this->flywheelMotor->set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
 
     this->pid = pid;
     this->rpmFilter = new EMAFilter(0.3);
@@ -29,7 +27,7 @@ void Flywheel::run()
     double averageArray[averageLength] = {};
     now = pros::millis();
     // printf("time,vexVelocity,filteredVelocity,rawVelocity,acceleration,emaGain,voltageOut,deltaTime,vexDeltaTime,deltaTicks");
-    printf("\ntime,velocity,rpm,wattageOne,wattageTwo,output,target");
+    // printf("\ntime,velocity,rpm,wattageOne,wattageTwo,output,target");
     while (true)
     {
         // this->currentTime = pros::millis();
@@ -57,6 +55,13 @@ void Flywheel::run()
         // this->oldTicks = this->currentTicks;
         // this->realVelocity = ((double)this->dP / (double)this->timestampDiff) * 1000;
 
+        if (this->targetRPM == 0)
+        {
+            this->flywheelMotor->set_voltage(0);
+            this->flywheelMotorTwo->set_voltage(0);
+            pros::delay(20);
+            continue;
+        }
         this->currentRPM = -this->rpmFilter->filter(this->smaFilter->filter(this->flywheelMotor->get_velocity()));
 
         // this->currentAccel = (this->currentRPM - this->lastRPM) / (this->currentTime - this->prevTime);
@@ -83,7 +88,7 @@ void Flywheel::run()
         }
         flywheelMotor->set_voltage(-output);
         flywheelMotorTwo->set_voltage(output);
-        printf("\n%d,%f,%f,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_watts(), this->flywheelMotorTwo->get_watts(), output, targetRPM);
+        // printf("\n%d,%f,%f,%f,%f,%f,%f", pros::millis(), this->flywheelMotor->get_velocity(), this->currentRPM, this->flywheelMotor->get_watts(), this->flywheelMotorTwo->get_watts(), output, targetRPM);
         // acceleration = (this->currentRPM - oldRPM) / ((pros::millis() - oldTime));
         // isShot = acceleration <= -3;
         // if (isShot && !isRecovering)
