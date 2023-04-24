@@ -8,20 +8,24 @@ TankDrive::TankDrive(pros::MotorGroup *left_motors, pros::MotorGroup *right_moto
     this->left_motors->set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
     this->right_motors->set_encoder_units(pros::E_MOTOR_ENCODER_COUNTS);
     this->imu = imu;
+
+    this->rpmFilter = new EMAFilter(0.6);
+    this->smaFilter = new SMAFilter(3);
     // Set brake modes
 
     // this->left_motors->set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
     // this->right_motors->set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
 
-    left_PID = new PID(0.25, 0.008, 0.2, 3 * TPI);
-    right_PID = new PID(0.25, 0.008, 0.2, 3 * TPI);
-    heading_PID = new PID(10, 0.1, 0, 1);
+    left_PID = new PID(0.25, 0.01, 0.2, 3 * TPI);
+    right_PID = new PID(0.25, 0.01, 0.2, 3 * TPI);
+    heading_PID = new PID(5, 0, 0, 1);
 
-    turn_PID = new PID(6, 0.15, 0.15, 5);
+    // turn_PID = new PID(7, 0.15, 0.15, 5)
+    turn_PID = new PID(6, 0.15, 1.5, 3);
 
     swing_PID = new PID(10, 0.15, 0.1, 5);
 
-    profile_PID = new PID(4, 0, 0);
+    profile_PID = new PID(8, 0, 0.05);
     brake_PID = new PID(1, 0, 0);
     this->left_motors->set_reversed(true);
 }
@@ -92,6 +96,16 @@ double TankDrive::getRightVelocity()
     return (positions[0] + positions[1]) / 2;
 }
 
+double TankDrive::getVelocity()
+{
+    return (getLeftVelocity() + getRightVelocity()) / 2.0;
+}
+
+double TankDrive::getEncoders()
+{
+    return (getLeftEncoders() + getRightEncoders()) / 2.0;
+}
+
 void TankDrive::forwardPID(double distance, double max_speed, bool correct_heading)
 {
     heading_correction = correct_heading;
@@ -121,21 +135,60 @@ void TankDrive::set_mode(TankDrive::auto_mode mode)
 {
     this->current_mode = mode;
 }
-void TankDrive::followProfileForward(std::vector<SetPoint *> profile)
+void TankDrive::followProfileForward(std::vector<SetPoint> profile)
 {
-    printf("size: %i\n", profile.size());
     double left_start = getLeftEncoders();
     double right_start = getRightEncoders();
+    double startPos = (getLeftEncoders() + getLeftEncoders()) / 2.0 / TPI;
+    double lastError = 0;
+    double error = 0;
+
+    double kP = 3;
+    double kD = 1500;
+
+    printf("time,motorOutput,pidOut,error,derivative,targetPos,targetVel,targetAccel,curPos,curVel,targetVelAdjusted,filteredVelocity,curPos");
     for (int i = 0; i < profile.size(); i++)
     {
-        double curVel = (getLeftVelocity() + getRightVelocity()) / 2;
-        // double out = profile_PID->calculate(curVel - profile.at(i));
-        left_motors->move_velocity(profile.at(i)->velocity * 142.718633);
-        right_motors->move_velocity(profile.at(i)->velocity * 142.718633);
+        SetPoint curSetPoint = profile.at(i);
+
+        bool reversed = false;
+        if (curSetPoint.velocity < 0)
+        {
+            reversed = true;
+        }
+        // left_motors->move_voltage(out + curSetPoint.velocity * 251.791936 + curSetPoint.acceleration * 1);
+        // right_motors->move_voltage(out + curSetPoint.velocity * 251.791936 + curSetPoint.acceleration * 1);
+        error = curSetPoint.position - ((getEncoders() / TPI - startPos) / 12);
+        double targetVel = curSetPoint.velocity + error * kP;
+
+        double filteredVelocity = this->rpmFilter->filter(this->smaFilter->filter(getVelocity() / 42.0));
+        // double motorOutput = kD * ((-((getLeftVelocity() + getRightVelocity()) / 2.0) / 42) + targetVel) + targetVel * 2700 + curSetPoint.acceleration * 400;
+
+        // feedforward
+        double motorOutput = 1200 * (reversed ? -1 : 1) + targetVel * 1800 + curSetPoint.acceleration * 550;
+
+        // feedback
+        double pidOut = kP * (-filteredVelocity + targetVel);
+        // pidOut = 0;
+        printf("\n%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", pros::millis(), motorOutput, pidOut, error, (error - lastError) / 0.02, curSetPoint.position, curSetPoint.velocity, curSetPoint.acceleration, curSetPoint.position - error, ((getLeftVelocity() + getRightVelocity()) / 2.0) / 42, targetVel, filteredVelocity, (((getLeftEncoders() + getRightEncoders()) / 2.0 / TPI - startPos) / 12));
+        left_motors->move_voltage(motorOutput + pidOut);
+        right_motors->move_voltage(motorOutput + pidOut);
+        // left_motors->move_velocity(curSetPoint.velocity * 42);
+        // right_motors->move_velocity(curSetPoint.velocity * 42);
+        lastError = error;
         pros::delay(20);
     }
-    left_motors->move_velocity(0);
-    right_motors->move_velocity(0);
+
+    // for (int i = 0; i < profile.size(); i++)
+    // {
+    //     SetPoint curSetPoint = profile.at(i);
+    //     left_motors->move_velocity(curSetPoint.velocity * 42);
+    //     right_motors->move_velocity(curSetPoint.velocity * 42);
+    //     pros::delay(20);
+    // }
+
+    left_motors->move_voltage(0);
+    right_motors->move_voltage(0);
     // while (true)
     // {
     //     printf("position: %f\n", (getLeftEncoders() + getRightEncoders()) / 2 * TPI);
@@ -171,7 +224,7 @@ void TankDrive::autoWait(double timeout)
         set_mode(TankDrive::auto_mode::DISABLE);
         turnPID(-135, 127 / 2);
         pros::delay(3000);
-        expansion.setExtended(true);
+        // expansion.setExtended(true);
         pros::delay(3000);
     }
     if (get_mode() == TankDrive::auto_mode::DRIVE)

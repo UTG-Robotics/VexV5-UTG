@@ -1,8 +1,14 @@
 #include "main.h"
-std::vector<SetPoint *> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt, double outputTime)
+std::vector<SetPoint> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt, double outputTime)
 {
     target -= start;
-    std::vector<SetPoint *> output;
+    bool reversed = false;
+    if (target < 0)
+    {
+        target = abs(target);
+        reversed = true;
+    }
+    std::vector<SetPoint> output;
     double curTime = 0;
 
     double curPos = 0;
@@ -61,19 +67,22 @@ std::vector<SetPoint *> generateProfile(double start, double target, double maxV
         else
         {
             curJerk = 0;
+            break;
         }
         curAccel += curJerk * dt;
         curVel += curAccel * dt;
         curPos += curVel * dt;
+        if (!reversed)
+            output.push_back(SetPoint(curPos, curVel, curAccel, curJerk, curTime));
+        else
+            output.push_back(SetPoint(-curPos, -curVel, -curAccel, -curJerk, curTime));
 
-        output.push_back(new SetPoint(curPos, curVel, curAccel, curJerk, curTime));
-
-        if (curVel < 0.01 && curAccel < 0.01 && curJerk == 0)
-        {
-            break;
-        }
+        // if (curVel < 0.01 && curAccel < 0.01 && curJerk == 0)
+        // {
+        //     break;
+        // }
     }
-    std::vector<SetPoint *> profile;
+    std::vector<SetPoint> profile;
     for (int i = 0; i < output.size(); i += (int)(0.02 / dt))
     {
         profile.push_back(output.at(i));

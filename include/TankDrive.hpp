@@ -9,7 +9,7 @@ public:
     void forwardPID(double distance, double max_speed, bool correct_heading = true);
     void turnPID(double angle, double max_speed);
     void swingPID(double angle, double max_speed, bool is_left);
-    void followProfileForward(std::vector<SetPoint *> profile);
+    void followProfileForward(std::vector<SetPoint> profile);
     void setBrake(double brake_factor);
     void setMaxSpeed(double max_speed);
     void autoStop();
@@ -17,6 +17,12 @@ public:
     void autoWaitUntil(double error);
     void startAuto();
     void endAuto();
+
+    double getVelocity();
+    double getEncoders();
+
+    bool autoOver = false;
+
     // void set_mode(auto_mode mode);
 
 private:
@@ -27,6 +33,9 @@ private:
         TURN = 2,
         DRIVE = 3
     };
+    EMAFilter *rpmFilter;
+    SMAFilter *smaFilter;
+
     auto_mode current_mode;
     auto_mode get_mode();
     void set_mode(auto_mode mode);
@@ -50,11 +59,11 @@ private:
     // pros::Rotation right_rotation;
 
     int startTime = 0;
-    bool autoOver = false;
     bool heading_correction = true;
     double max_speed = 127;
     bool is_left = true;
-    const double TPI = (1.0 / (4.25577 * M_PI)) * (300.0 * (7.0 / 3.0));
+    // const double TPI = (1.0 / (4.25577 * M_PI)) * (300.0 * (7.0 / 3.0));
+    const double TPI = 50.277778;
     double brake_factor = 0;
     double brake_pos_left = 0;
     double brake_pos_right = 0;

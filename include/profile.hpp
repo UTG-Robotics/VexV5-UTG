@@ -19,4 +19,4 @@ public:
     }
 };
 
-std::vector<SetPoint *> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt, double outputTime = 0.02);
+std::vector<SetPoint> generateProfile(double start, double target, double maxVel, double maxAccel, double maxJerk, double dt, double outputTime = 0.02);
