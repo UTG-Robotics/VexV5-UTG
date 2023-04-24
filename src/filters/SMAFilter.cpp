@@ -13,7 +13,7 @@ double SMAFilter::filter(double input)
         this->values.pop_back();
     }
     this->values.push_front(input);
-    double sum = std::accumulate(values.begin(), values.end(), 0);
+    double sum = std::accumulate(values.begin(), values.end(), 0.0);
     return sum / this->values.size();
 }
 
